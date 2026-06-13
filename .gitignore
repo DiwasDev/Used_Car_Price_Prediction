@@ -1,0 +1,30 @@
+# Virtual Environments
+venv/
+
+# Your Intended Source Code Exclusions
+src/encoder.py
+src/feature_engineering.py
+src/handle_missing.py
+src/scaler.py
+src/pipeline.py
+main.py
+
+# Python Automated Caches & Compiled Files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Testing & Metrics
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# IDEs & System Files
+.vscode/
+.idea/
+.DS_Store

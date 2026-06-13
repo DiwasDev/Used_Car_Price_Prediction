@@ -1,0 +1,33 @@
+data:
+  raw_path: "data/raw/used_cars.csv"
+  processed_path: "data/processed/used_cars_processed.csv"
+
+cleaning:
+  price_col: "price"
+  milage_col: "milage"
+  # Rows with price above this are treated as outliers (> $500k)
+  price_upper_cap: 500000
+  price_lower_cap: 1000
+  # milage upper cap (> 500k miles is unreliable)
+  milage_upper_cap: 500000
+
+missing_values:
+  # Columns and their imputation strategy
+  fuel_type: "mode"          # 170 missing  → fill with most frequent
+  accident: "constant"       # 113 missing  → fill with "None reported"
+  clean_title: "constant"    # 596 missing  → fill with "No" (NaN = no clean title)
+
+feature_engineering:
+  current_year: 2024
+  # Frequency-encode high-cardinality categoricals
+  high_cardinality_threshold: 50
+  # One-hot encode these low-cardinality cols
+  ohe_cols:
+    - fuel_type_clean
+    - transmission_type
+    - accident_flag
+
+target:
+  col: "price_usd"
+
+random_state: 42
