@@ -9,7 +9,6 @@ Design Pattern: Template Method
   - This mirrors scikit-learn's Transformer API so steps slot into
     a Pipeline or ColumnTransformer if needed later.
 """
-
 from __future__ import annotations
 
 import logging

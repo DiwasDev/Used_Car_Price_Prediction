@@ -25,9 +25,6 @@ import pandas as pd
 
 from src.base import BaseTransformer
 
-logger = logging.getLogger(__name__)
-
-
 class DataCleaner(BaseTransformer):
     """
     Converts raw string columns to numeric, flags junk values,
@@ -58,8 +55,8 @@ class DataCleaner(BaseTransformer):
         df = self._clean_mileage(df)
         df = self._clean_fuel_type(df)
         df = self._clean_clean_title(df)
-        df = self._remove_price_outliers(df)
-        df = self._remove_mileage_outliers(df)
+        # df = self._remove_price_outliers(df)
+        # df = self._remove_mileage_outliers(df)
         logger.info("DataCleaner done. Shape after cleaning: %s", df.shape)
         return df
 
@@ -112,41 +109,41 @@ class DataCleaner(BaseTransformer):
         df = df.drop(columns=["clean_title"])
         return df
 
-    def _remove_price_outliers(self, df: pd.DataFrame) -> pd.DataFrame:
+    # def _remove_price_outliers(self, df: pd.DataFrame) -> pd.DataFrame:
 
 
-        before = len(df)
+    #     before = len(df)
 
-        ## Find lower and upper caps using IQR method
-        q1 = df["price_usd"].quantile(0.25)
-        q3 = df["price_usd"].quantile(0.75)
-        iqr = q3 - q1
-        price_lower_cap = q1 - 1.5 * iqr
-        price_upper_cap = q3 + 1.5 * iqr
+    #     ## Find lower and upper caps using IQR method
+    #     q1 = df["price_usd"].quantile(0.25)
+    #     q3 = df["price_usd"].quantile(0.75)
+    #     iqr = q3 - q1
+    #     price_lower_cap = q1 - 1.5 * iqr
+    #     price_upper_cap = q3 + 1.5 * iqr
         
-        df['price_usd'] = df['price_usd'].clip(lower=price_lower_cap, upper=price_upper_cap)
-        logger.info(
-            "Price outlier removal: %d rows dropped (price outside [%s, %s])",
-            before - len(df),
-            price_lower_cap,
-            price_upper_cap,
-        )
-        return df
+    #     df['price_usd'] = df['price_usd'].clip(lower=price_lower_cap, upper=price_upper_cap)
+    #     logger.info(
+    #         "Price outlier removal: %d rows dropped (price outside [%s, %s])",
+    #         before - len(df),
+    #         price_lower_cap,
+    #         price_upper_cap,
+    #     )
+    #     return df
 
-    def _remove_mileage_outliers(self, df: pd.DataFrame) -> pd.DataFrame:
-        before = len(df)
+    # def _remove_mileage_outliers(self, df: pd.DataFrame) -> pd.DataFrame:
+    #     before = len(df)
 
-        ## Find lower and upper caps using IQR method
-        q1 = df["mileage_num"].quantile(0.25)
-        q3 = df["mileage_num"].quantile(0.75)
-        iqr = q3 - q1
-        mileage_lower_cap = q1 - 1.5 * iqr
-        mileage_upper_cap = q3 + 1.5 * iqr
-        df['mileage_num'] = df['mileage_num'].clip(lower=mileage_lower_cap, upper=mileage_upper_cap)
-        logger.info(
-            "Mileage outlier removal: %d rows dropped (mileage > %s)",
-            before - len(df),
-            mileage_upper_cap,
-        )
+    #     ## Find lower and upper caps using IQR method
+    #     q1 = df["mileage_num"].quantile(0.25)
+    #     q3 = df["mileage_num"].quantile(0.75)
+    #     iqr = q3 - q1
+    #     mileage_lower_cap = q1 - 1.5 * iqr
+    #     mileage_upper_cap = q3 + 1.5 * iqr
+    #     df['mileage_num'] = df['mileage_num'].clip(lower=mileage_lower_cap, upper=mileage_upper_cap)
+    #     logger.info(
+    #         "Mileage outlier removal: %d rows dropped (mileage > %s)",
+    #         before - len(df),
+    #         mileage_upper_cap,
+    #     )
         
-        return df
+    #     return df
