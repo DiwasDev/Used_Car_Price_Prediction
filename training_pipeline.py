@@ -45,6 +45,8 @@ def run_training_pipeline(raw_path: str = "data/raw/used_cars.csv", output_dir: 
     # Categorical Encoding
     data = encode_categorical(data)
     logger.info("Categorically encoded shape - train: %s, test: %s", data[0].shape, data[1].shape)
+
+    #
     
     
     # Save the files
