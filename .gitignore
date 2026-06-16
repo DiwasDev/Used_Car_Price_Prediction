@@ -1,14 +1,6 @@
 # Virtual Environments
 venv/
 
-# Your Intended Source Code Exclusions
-src/encoder.py
-src/feature_engineering.py
-src/handle_missing.py
-src/scaler.py
-src/pipeline.py
-main.py
-
 # Python Automated Caches & Compiled Files
 __pycache__/
 *.pyc
@@ -28,3 +20,8 @@ htmlcov/
 .vscode/
 .idea/
 .DS_Store
+
+# Ignore agent-related files
+AGENTS.md
+.aigignore
+agents/

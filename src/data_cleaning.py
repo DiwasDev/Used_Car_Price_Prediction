@@ -1,149 +1,161 @@
 """
 data_cleaning.py
 ----------------
-Fixes raw data problems identified during EDA:
+Raw string columns → typed numeric/boolean columns.
 
-  Problem 1 – price is a string:  "$10,300" → 10300.0  (float, new col price_usd)
-  Problem 2 – milage is a string: "51,000 mi." → 51000.0 (float, new col mileage_num)
-  Problem 3 – fuel_type has junk: "–" and "not supported" → NaN (handled later by imputer)
-  Problem 4 – clean_title only has "Yes"; NaN means no clean title → binary flag
-  Problem 5 – outlier prices)
-  Problem 6 – outlier mileage values
-
-Design Pattern: Strategy
-  Each column-level fix is a small private method.
-  The public transform() orchestrates them in order.
-  Swapping or skipping a fix = one line change.
+Design patterns
+  Strategy  – each column fix is a pluggable CleaningStrategy
+  Factory   – CleaningStrategyFactory builds the default strategy list
+  Facade    – DataCleaner exposes a single transform() entry point
 """
 
 from __future__ import annotations
 
 import logging
-import re
+import os
+import sys
+from abc import ABC, abstractmethod
+
+# Add project root to sys.path to allow direct script execution from src/
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 import pandas as pd
 
 from src.base import BaseTransformer
 
+logger = logging.getLogger(__name__)
+
+
+class CleaningStrategy(ABC):
+    """Strategy interface for a single cleaning operation."""
+
+    @abstractmethod
+    def clean(self, df: pd.DataFrame) -> pd.DataFrame:
+        ...
+
+
+class PriceCleaningStrategy(CleaningStrategy):
+    """'$10,300' → price_usd (float). Drops original price column."""
+
+    SOURCE_COL = "price"
+    TARGET_COL = "price_usd"
+
+    def clean(self, df: pd.DataFrame) -> pd.DataFrame:
+        try:
+            df[self.TARGET_COL] = (
+                df[self.SOURCE_COL]
+                .str.replace(r"[$,]", "", regex=True)
+                .str.strip()
+                .pipe(pd.to_numeric, errors="coerce")
+            )
+            return df.drop(columns=[self.SOURCE_COL])
+        except Exception as e:
+            logger.error("Error in PriceCleaningStrategy.clean: %s", e)
+            raise e
+
+
+class MileageCleaningStrategy(CleaningStrategy):
+    """'51,000 mi.' → mileage_num (float). Drops original milage column."""
+
+    SOURCE_COL = "milage"
+    TARGET_COL = "mileage_num"
+
+    def clean(self, df: pd.DataFrame) -> pd.DataFrame:
+        try:
+            df[self.TARGET_COL] = (
+                df[self.SOURCE_COL]
+                .str.replace(r"[,]", "", regex=True)
+                .str.replace(r"\s*mi\.\s*$", "", regex=True)
+                .str.strip()
+                .pipe(pd.to_numeric, errors="coerce")
+            )
+            return df.drop(columns=[self.SOURCE_COL])
+        except Exception as e:
+            logger.error("Error in MileageCleaningStrategy.clean: %s", e)
+            raise e
+
+
+class FuelTypeCleaningStrategy(CleaningStrategy):
+    """Replace known junk tokens with NaN for downstream imputation."""
+
+    JUNK_VALUES = frozenset({"–", "not supported", ""})
+
+    def clean(self, df: pd.DataFrame) -> pd.DataFrame:
+        try:
+            df["fuel_type"] = df["fuel_type"].apply(
+                lambda x: None if str(x).strip() in self.JUNK_VALUES else x
+            )
+            return df
+        except Exception as e:
+            logger.error("Error in FuelTypeCleaningStrategy.clean: %s", e)
+            raise e
+
+
+class CleanTitleCleaningStrategy(CleaningStrategy):
+    """'Yes' / NaN → has_clean_title binary flag. Drops clean_title."""
+
+    def clean(self, df: pd.DataFrame) -> pd.DataFrame:
+        try:
+            df["has_clean_title"] = (
+                df["clean_title"].map({"Yes": 1}).fillna(0).astype(int)
+            )
+            return df.drop(columns=["clean_title"])
+        except Exception as e:
+            logger.error("Error in CleanTitleCleaningStrategy.clean: %s", e)
+            raise e
+
+## Just if we wnat to reutrn default pattern of cleanign pipeline
+class CleaningStrategyFactory:
+    """Factory for assembling the default cleaning strategy chain."""
+
+    @staticmethod
+    def create_default() -> list[CleaningStrategy]:
+        try:
+            return [
+                PriceCleaningStrategy(),
+                MileageCleaningStrategy(),
+                FuelTypeCleaningStrategy(),
+                CleanTitleCleaningStrategy(),
+            ]
+        except Exception as e:
+            logger.error("Error in CleaningStrategyFactory.create_default: %s", e)
+            raise e
+
+## Context class for strategy pattern
 class DataCleaner(BaseTransformer):
     """
-    Converts raw string columns to numeric, flags junk values,
-    and caps statistical outliers.
+    Facade that runs a chain of CleaningStrategy objects in order.
 
     Parameters
     ----------
-    price_upper_cap : float
-        Rows with price above this are dropped as outliers.
-    price_lower_cap : float
-        Rows with price below this are dropped (likely data errors).
-    milage_upper_cap : float
-        Rows with mileage above this are dropped.
+    strategies : list[CleaningStrategy] | None
+        Custom strategy chain. Defaults to CleaningStrategyFactory.create_default().
     """
 
-    JUNK_FUEL_VALUES = {"–", "not supported", ""}
-
-    def __init__(self) -> None:
-        pass
-
-    # ------------------------------------------------------------------ #
-    # Public API                                                           #
-    # ------------------------------------------------------------------ #
+    def __init__(self, strategies: list[CleaningStrategy] | None = None) -> None:
+        try:
+            self.strategies = strategies or CleaningStrategyFactory.create_default()
+        except Exception as e:
+            logger.error("Error in DataCleaner.__init__: %s", e)
+            raise e
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
-        df = df.copy()
-        df = self._clean_price(df)
-        df = self._clean_mileage(df)
-        df = self._clean_fuel_type(df)
-        df = self._clean_clean_title(df)
-        # df = self._remove_price_outliers(df)
-        # df = self._remove_mileage_outliers(df)
-        logger.info("DataCleaner done. Shape after cleaning: %s", df.shape)
-        return df
-
-    # ------------------------------------------------------------------ #
-    # Private helpers (Strategy methods)                                  #
-    # ------------------------------------------------------------------ #
-
-    @staticmethod
-    def _clean_price(df: pd.DataFrame) -> pd.DataFrame:
-        """'$10,300' → 10300.0  stored in 'price_usd'. Drop original."""
-        df["price_usd"] = (
-            df["price"]
-            .str.replace(r"[$,]", "", regex=True)
-            .str.strip()
-            .pipe(pd.to_numeric, errors="coerce")
-        )
-        df = df.drop(columns=["price"])
-        logger.debug("price_usd: %d non-null", df["price_usd"].notna().sum())
-        return df
-
-    @staticmethod
-    def _clean_mileage(df: pd.DataFrame) -> pd.DataFrame:
-        """'51,000 mi.' → 51000.0  stored in 'mileage_num'. Drop original."""
-        df["mileage_num"] = (
-            df["milage"]
-            .str.replace(r"[,]", "", regex=True)   # remove commas
-            .str.replace(r"\s*mi\.\s*$", "", regex=True)  # remove ' mi.'
-            .str.strip()
-            .pipe(pd.to_numeric, errors="coerce")
-        )
-        df = df.drop(columns=["milage"])
-        logger.debug("mileage_num: %d non-null", df["mileage_num"].notna().sum())
-        return df
-
-    def _clean_fuel_type(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Replace known junk tokens with NaN so the imputer can fill them."""
-        df["fuel_type"] = df["fuel_type"].apply(
-            lambda x: None if str(x).strip() in self.JUNK_FUEL_VALUES else x
-        )
-        return df
-
-    @staticmethod
-    def _clean_clean_title(df: pd.DataFrame) -> pd.DataFrame:
-        """
-        'clean_title' has only "Yes" and NaN.
-        NaN = no clean title → encode as binary 0/1.
-        Column renamed to 'has_clean_title'.
-        """
-        df["has_clean_title"] = df["clean_title"].map({"Yes": 1}).fillna(0).astype(int)
-        df = df.drop(columns=["clean_title"])
-        return df
-
-    # def _remove_price_outliers(self, df: pd.DataFrame) -> pd.DataFrame:
+        result = df.copy()
+        try:
+            for strategy in self.strategies:
+                result = strategy.clean(result)
+            logger.info("DataCleaner done. Shape: %s", result.shape)
+            return result
+        except Exception as e:
+            logger.error("Error cleaning data: %s", e)
+            raise e
 
 
-    #     before = len(df)
-
-    #     ## Find lower and upper caps using IQR method
-    #     q1 = df["price_usd"].quantile(0.25)
-    #     q3 = df["price_usd"].quantile(0.75)
-    #     iqr = q3 - q1
-    #     price_lower_cap = q1 - 1.5 * iqr
-    #     price_upper_cap = q3 + 1.5 * iqr
-        
-    #     df['price_usd'] = df['price_usd'].clip(lower=price_lower_cap, upper=price_upper_cap)
-    #     logger.info(
-    #         "Price outlier removal: %d rows dropped (price outside [%s, %s])",
-    #         before - len(df),
-    #         price_lower_cap,
-    #         price_upper_cap,
-    #     )
-    #     return df
-
-    # def _remove_mileage_outliers(self, df: pd.DataFrame) -> pd.DataFrame:
-    #     before = len(df)
-
-    #     ## Find lower and upper caps using IQR method
-    #     q1 = df["mileage_num"].quantile(0.25)
-    #     q3 = df["mileage_num"].quantile(0.75)
-    #     iqr = q3 - q1
-    #     mileage_lower_cap = q1 - 1.5 * iqr
-    #     mileage_upper_cap = q3 + 1.5 * iqr
-    #     df['mileage_num'] = df['mileage_num'].clip(lower=mileage_lower_cap, upper=mileage_upper_cap)
-    #     logger.info(
-    #         "Mileage outlier removal: %d rows dropped (mileage > %s)",
-    #         before - len(df),
-    #         mileage_upper_cap,
-    #     )
-        
-    #     return df
+# if __name__ == "__main__":
+#     df = pd.read_csv("/home/divas/ml/logistics_project/data/raw/used_cars.csv")
+#     data_cleaner = DataCleaner()
+#     data_cleaner.fit(df)
+#     df = data_cleaner.transform(df)
+#     print(df.head())

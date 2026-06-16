@@ -1,14 +1,5 @@
-"""
-base.py
--------
-Abstract base class for all pipeline steps.
+"""Shared abstractions for the preprocessing pipeline."""
 
-Design Pattern: Template Method
-  - Every transformer defines fit() and transform() separately.
-  - fit_transform() is final — subclasses never override it.
-  - This mirrors scikit-learn's Transformer API so steps slot into
-    a Pipeline or ColumnTransformer if needed later.
-"""
 from __future__ import annotations
 
 import logging
@@ -20,23 +11,27 @@ logger = logging.getLogger(__name__)
 
 
 class BaseTransformer(ABC):
-    """
-    Contract every preprocessing step must satisfy.
+    """Template-method base: optional fit, required transform."""
 
-    Subclass and implement:
-        fit(df)        → learn stats/mappings from training data
-        transform(df)  → apply learned transformation (pure, no side-effects on input)
-    """
-
-    def fit(self, df: pd.DataFrame) -> "BaseTransformer":
-        """Learn parameters from df. Returns self for chaining."""
-        return self
+    def fit(
+        self, df: pd.DataFrame, y: pd.Series | None = None
+    ) -> BaseTransformer:
+        try:
+            return self
+        except Exception as e:
+            logger.error("Error in BaseTransformer.fit: %s", e)
+            raise e
 
     @abstractmethod
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Apply transformation. Must not mutate the input df."""
         ...
 
-    def fit_transform(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Convenience: fit then transform in one call."""
-        return self.fit(df).transform(df)
+    def fit_transform(
+        self, df: pd.DataFrame, y: pd.Series | None = None
+    ) -> pd.DataFrame:
+        try:
+            return self.fit(df, y).transform(df)
+        except Exception as e:
+            logger.error("Error in BaseTransformer.fit_transform: %s", e)
+            raise e
+
