@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 import pandas as pd
 from sklearn.base import RegressorMixin
-from src.evaluator import ModelEvaluator
+from src.components.evaluator import ModelEvaluator
 
 logger = logging.getLogger(__name__)
 

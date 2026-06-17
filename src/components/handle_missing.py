@@ -17,8 +17,8 @@ from abc import ABC, abstractmethod
 import numpy as np
 import pandas as pd
 
-from src.base import BaseTransformer
-from src.feature_engineering import EV_BRANDS
+from src.components.base import BaseTransformer
+from src.components.feature_engineering import EV_BRANDS
 
 logger = logging.getLogger(__name__)
 

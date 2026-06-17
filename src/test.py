@@ -1,12 +1,12 @@
 import logging
 import os
 import pandas as pd
-from src.data_ingestion import CSVDataIngestion
-from src.data_cleaning import DataCleaner
-from src.handle_outliers import OutlierHandlerFactory
-from src.feature_engineering import FeatureEngineer
-from src.handle_missing import MissingValueHandler
-from src.encoder import CategoricalEncoder, OneHotEncodingStrategy, TargetEncodingStrategy
+from src.components.data_ingestion import CSVDataIngestion
+from src.components.data_cleaning import DataCleaner
+from src.components.handle_outliers import OutlierHandlerFactory
+from src.components.feature_engineering import FeatureEngineer
+from src.components.handle_missing import MissingValueHandler
+from src.components.encoder import CategoricalEncoder, OneHotEncodingStrategy, TargetEncodingStrategy
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -38,7 +38,7 @@ def run_test_pipeline():
         logger.info("Raw Data Shape: %s", df.shape)
 
         logger.info("=== STEP 2: Splitting Data ===")
-        from src.data_splitter import TrainTestSplitStrategy
+        from src.components.data_splitter import TrainTestSplitStrategy
         splitter = TrainTestSplitStrategy(test_size=0.2, random_state=42)
         train_df, test_df = splitter.split(df)
         logger.info("Train Data Shape: %s, Test Data Shape: %s", train_df.shape, test_df.shape)

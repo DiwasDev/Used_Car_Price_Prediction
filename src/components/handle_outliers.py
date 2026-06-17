@@ -17,7 +17,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 import pandas as pd
 
-from src.base import BaseTransformer
+from src.components.base import BaseTransformer
 
 logger = logging.getLogger(__name__)
 

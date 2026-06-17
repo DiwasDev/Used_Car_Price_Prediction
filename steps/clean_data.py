@@ -1,5 +1,5 @@
 import pandas as pd
-from src.data_cleaning import DataCleaner
+from src.components.data_cleaning import DataCleaner
 
 def clean_data(data: tuple[pd.DataFrame, pd.DataFrame]) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Cleans train and test datasets using DataCleaner."""

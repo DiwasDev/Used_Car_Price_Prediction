@@ -18,7 +18,7 @@ from enum import Enum
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler
 
-from src.base import BaseTransformer
+from src.components.base import BaseTransformer
 
 logger = logging.getLogger(__name__)
 

@@ -1,5 +1,5 @@
 import pandas as pd
-from src.encoder import CategoricalEncoder, OneHotEncodingStrategy, TargetEncodingStrategy
+from src.components.encoder import CategoricalEncoder, OneHotEncodingStrategy, TargetEncodingStrategy
 
 # class SafeOneHotEncodingStrategy(OneHotEncodingStrategy):
 #     def transform(self, df: pd.DataFrame) -> pd.DataFrame:

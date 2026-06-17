@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 import pandas as pd
 from sklearn.base import RegressorMixin
-from src.model_builder import ModelBuilder, LinearRegressionStrategy
+from src.components.model_builder import ModelBuilder, LinearRegressionStrategy
 
 logger = logging.getLogger(__name__)
 

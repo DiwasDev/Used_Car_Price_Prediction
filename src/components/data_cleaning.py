@@ -23,7 +23,7 @@ if project_root not in sys.path:
 
 import pandas as pd
 
-from src.base import BaseTransformer
+from src.components.base import BaseTransformer
 
 logger = logging.getLogger(__name__)
 

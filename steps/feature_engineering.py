@@ -1,5 +1,5 @@
 import pandas as pd
-from src.feature_engineering import FeatureEngineer
+from src.components.feature_engineering import FeatureEngineer
 
 def feature_engineer(data: tuple[pd.DataFrame, pd.DataFrame]) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Applies feature engineering to train and test datasets."""

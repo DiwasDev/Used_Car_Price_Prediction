@@ -20,7 +20,7 @@ from category_encoders import TargetEncoder
 from sklearn.model_selection import KFold
 from sklearn.preprocessing import OneHotEncoder
 
-from src.base import BaseTransformer
+from src.components.base import BaseTransformer
 
 logger = logging.getLogger(__name__)
 

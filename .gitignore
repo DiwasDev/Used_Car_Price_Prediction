@@ -25,3 +25,6 @@ htmlcov/
 AGENTS.md
 .aigignore
 agents/
+
+# Ignore experiments files
+notebooks/experiment.ipynb
