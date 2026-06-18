@@ -28,3 +28,4 @@ agents/
 
 # Ignore experiments files
 notebooks/experiment.ipynb
+artifact/

@@ -1,2 +1,0 @@
-[ 2026-06-18 11:11:46,762 ] root - INFO - unsupported operand type(s) for +: 'int' and 'str'
-[ 2026-06-18 11:11:46,762 ] root - ERROR - Error occurred in python script: [/home/divas/ml/logistics_project/test.py] at line number [6]: unsupported operand type(s) for +: 'int' and 'str'
