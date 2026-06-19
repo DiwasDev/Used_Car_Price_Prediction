@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 
 from src.components.base import BaseTransformer
-from src.components.feature_engineering import EV_BRANDS
+from src.components.data_transformers.feature_engineering import EV_BRANDS
 
 logger = logging.getLogger(__name__)
 

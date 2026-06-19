@@ -1,7 +1,7 @@
 import pandas as pd
-from src.components.handle_outliers import OutlierHandler
-from src.components.handle_outliers import LogTransformStrategy
-from src.components.handle_outliers import IQROutlierHandlerStrategy
+from src.components.data_transformers.handle_outliers import OutlierHandler
+from src.components.data_transformers.handle_outliers import LogTransformStrategy
+from src.components.data_transformers.handle_outliers import IQROutlierHandlerStrategy
 
 def handle_outliers(data: tuple[pd.DataFrame, pd.DataFrame]) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Caps outliers using IQR method for specified columns."""
