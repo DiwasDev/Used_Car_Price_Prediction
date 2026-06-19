@@ -1,0 +1,40 @@
+columns:
+  - brand: str
+  - model: str
+  - model_year: int64
+  - milage: str
+  - fuel_type: str
+  - engine: str
+  - transmission: str
+  - ext_col: str
+  - int_col: str
+  - accident: str
+  - clean_title: str
+  - price: str
+
+numerical_columns:
+  - model_year
+
+categorical_columns:
+  - brand
+  - model
+  - fuel_type
+  - engine
+  - transmission
+  - ext_col
+  - int_col
+  - accident
+  - clean_title
+
+# Kept as str due to dirty data formatting (e.g., symbols like '$', ',', 'mi')
+problematic_string_columns:
+  - milage
+  - price
+
+drop_columns: "_id"  # Leave empty or add any column you want to drop later
+
+# For data transformation
+num_features:
+  - model_year
+
+mm_columns: []    # Standard MinMax scaling targets (empty until price/milage are converted to numeric)
