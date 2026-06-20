@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 def run_pipeline() -> None:
     """
-    Runs the entire pipeline including preprocessing, model building, and evaluation.
+    Runs the entire pipeline including preprocessing, model building, and evaluationn .
 
     Parameters:
             None
