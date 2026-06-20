@@ -9,7 +9,7 @@ def handle_outliers(data: tuple[pd.DataFrame, pd.DataFrame]) -> tuple[pd.DataFra
     outlier_handler = OutlierHandler()
 
     # Fitting the parameters
-    outlier_handler.fit(train_df)
+    outlier_handler.fit_transform(train_df)
 
     # Applying the changes
     train_df = outlier_handler.transform(train_df)

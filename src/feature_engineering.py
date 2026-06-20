@@ -291,7 +291,16 @@ class FuelTypeMergeStep(FeatureStep):
 #             raise e
 
 
-
+class ModelYearFeatureStep(FeatureStep):
+    """Extract model year from model year."""
+    def apply(self, df: pd.DataFrame) -> pd.DataFrame:
+        try:
+            df = df.copy()
+            df["model_year"] = 2026 - df['model_year'] 
+            return df
+        except Exception as e:
+            logger.error("Error in ModelYearFeatureStep.apply: %s", e)
+            raise e
 
 ## Just if we wnat to reutrn default pattern of feature engineering pipeline
 class FeatureEngineerFactory:
@@ -307,6 +316,7 @@ class FeatureEngineerFactory:
                 TransmissionFeatureStep(),
                 EngineSpecFeatureStep(),
                 FuelTypeMergeStep(),
+                ModelYearFeatureStep(),
             ]
         except Exception as e:
             logger.error("Error in FeatureEngineerFactory.create_default: %s", e)

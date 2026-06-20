@@ -123,7 +123,7 @@ class OutlierHandlerFactory:
         """Creates a default list of outlier strategies."""
         try:
             return [
-             LogTransformStrategy(columns=["price_usd", "mileage_num"]),
+             LogTransformStrategy(columns=["price_usd"]),
              IQROutlierHandlerStrategy(columns=["engine_hp", "engine_displacement"]),
          ]
         except Exception as e:
@@ -141,11 +141,13 @@ class OutlierHandler(BaseTransformer):
             logger.error("Error in OutlierHandler.__init__: %s", e)
             raise e
         
-    def fit(self, df: pd.DataFrame) -> pd.DataFrame:
+    def fit_transform(self, df: pd.DataFrame) -> pd.DataFrame:
         """Fits the outlier strategies in order."""
         try:
+            result = df.copy()
             for strategy in self.strategies:
                 strategy.fit(df)
+                result = strategy.apply(result)
             return df
         except Exception as e:
             logger.error("Error in OutlierHandler.fit: %s", e)

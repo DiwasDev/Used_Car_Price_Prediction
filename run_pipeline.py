@@ -5,6 +5,14 @@ Script to run the end-to-end pipeline: preprocessing, model building, and evalua
 """
 
 from __future__ import annotations
+import os
+import joblib
+
+
+
+# How to load it back later:
+# loaded_model = joblib.load('my_model.pkl')
+
 
 import logging
 from training_pipeline import run_training_pipeline
@@ -32,6 +40,9 @@ def run_pipeline() -> None:
         
         logger.info("Step 2: Building/training the model...")
         model = build_model(train_df)
+
+        os.makedirs('models', exist_ok=True)
+        joblib.dump(model, 'models/model.pkl')
         
         logger.info("Step 3: Evaluating the trained model...")
         metrics = evaluate_model_step(model, test_df)

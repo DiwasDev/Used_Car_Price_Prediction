@@ -34,6 +34,8 @@ def build_model(train_df: pd.DataFrame, target_col: str = "price_usd") -> Regres
         strategy = LinearRegressionStrategy()
         builder = ModelBuilder(strategy)
         model = builder.build_model(X_train, y_train)
+
+        
         
         return model
     except Exception as e:
