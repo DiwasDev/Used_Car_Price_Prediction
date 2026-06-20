@@ -9,19 +9,19 @@ from pandas import DataFrame
 from src.exception import MyException
 from src.logger import logging
 from src.utils.main_utils import read_yaml_file
-from src.entity.artifact_entity import DataIngestionArtifact, DataValidationArtifact
+from src.entity.artifact_entity import DataSplitterArtifact, DataValidationArtifact
 from src.entity.config_entity import DataValidationConfig
 from src.constants import SCHEMA_FILE_PATH
 
 
 class DataValidation:
-    def __init__(self, data_ingestion_artifact: DataIngestionArtifact, data_validation_config: DataValidationConfig):
+    def __init__(self, splitter_artifact: DataSplitterArtifact, data_validation_config: DataValidationConfig):
         """
-        :param data_ingestion_artifact: Output reference of data ingestion artifact stage
+        :param splitter_artifact: Output reference of data splitter artifact stage
         :param data_validation_config: configuration for data validation
         """
         try:
-            self.data_ingestion_artifact = data_ingestion_artifact
+            self.splitter_artifact = splitter_artifact
             self.data_validation_config = data_validation_config
             self._schema_config =read_yaml_file(file_path=SCHEMA_FILE_PATH)
         except Exception as e:
@@ -94,8 +94,8 @@ class DataValidation:
         try:
             validation_error_msg = ""
             logging.info("Starting data validation")
-            train_df, test_df = (DataValidation.read_data(file_path=self.data_ingestion_artifact.trained_file_path),
-                                 DataValidation.read_data(file_path=self.data_ingestion_artifact.test_file_path))
+            train_df, test_df = (DataValidation.read_data(file_path=self.splitter_artifact.trained_file_path),
+                                 DataValidation.read_data(file_path=self.splitter_artifact.test_file_path))
 
             # Checking col len of dataframe for train/test df
             status = self.validate_number_of_columns(dataframe=train_df)

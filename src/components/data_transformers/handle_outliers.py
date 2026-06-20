@@ -141,12 +141,12 @@ class OutlierHandler(BaseTransformer):
             logger.error("Error in OutlierHandler.__init__: %s", e)
             raise e
         
-    def fit(self, df: pd.DataFrame) -> pd.DataFrame:
+    def fit(self, df: pd.DataFrame, y: pd.Series | None = None) -> OutlierHandler:
         """Fits the outlier strategies in order."""
         try:
             for strategy in self.strategies:
                 strategy.fit(df)
-            return df
+            return self
         except Exception as e:
             logger.error("Error in OutlierHandler.fit: %s", e)
             raise e
