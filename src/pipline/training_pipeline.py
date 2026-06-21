@@ -5,6 +5,8 @@ from src.logger import logging
 from steps.ingest_data import ingest_data
 from steps.split_data import split_data
 from steps.transform_data import transform_data
+from steps.train_model import train_model
+# from steps.evaluate_model import evaluate_model
 
 from src.components.data_validation import DataValidation
 
@@ -13,6 +15,8 @@ from src.entity.config_entity import (
     DataSplitterConfig,
     DataValidationConfig,
     DataTransformationConfig,
+    ModelTrainerConfig,
+    # ModelEvaluationConfig,
 )
                                           
 from src.entity.artifact_entity import (
@@ -20,6 +24,8 @@ from src.entity.artifact_entity import (
     DataSplitterArtifact,
     DataValidationArtifact,
     DataTransformationArtifact,
+    ModelTrainerArtifact,
+    # ModelEvaluationArtifact,
 )
 
 
@@ -43,6 +49,8 @@ class TrainPipeline:
             self.data_splitter_config = DataSplitterConfig()
             self.data_validation_config = DataValidationConfig()
             self.data_transformation_config = DataTransformationConfig()
+            self.model_trainer_config = ModelTrainerConfig()
+            # self.model_eval_config = ModelEvaluationConfig()
         except Exception as e:
             raise MyException(e, sys)
 
@@ -134,6 +142,54 @@ class TrainPipeline:
         except Exception as e:
             raise MyException(e, sys) from e
 
+    def start_model_trainer(self, data_transformation_artifact: DataTransformationArtifact) -> ModelTrainerArtifact:
+        """
+        Runs the model trainer step.
+
+        Parameters:
+            data_transformation_artifact: DataTransformationArtifact: Artifact from data transformation.
+
+        Returns:
+            artifact: ModelTrainerArtifact: Artifact containing trained model paths and metrics.
+        """
+        try:
+            logging.info("Entered the start_model_trainer method of TrainPipeline class")
+            model_trainer_artifact = train_model(
+                config=self.model_trainer_config,
+                transformation_artifact=data_transformation_artifact
+            )
+            logging.info("Exited the start_model_trainer method of TrainPipeline class")
+            return model_trainer_artifact
+        except Exception as e:
+            raise MyException(e, sys) from e
+
+    # def start_model_evaluation(
+    #     self,
+    #     data_transformaion_artifact: DataTransformationArtifact,
+    #     model_trainer_artifact: ModelTrainerArtifact
+    # ) -> ModelEvaluationArtifact:
+    #     """
+    #     Runs the model evaluation step.
+
+    #     Parameters:
+    #         splitter_artifact: DataSplitterArtifact: Artifact from data splitting.
+    #         model_trainer_artifact: ModelTrainerArtifact: Artifact from model training.
+
+    #     Returns:
+    #         artifact: ModelEvaluationArtifact: Artifact containing evaluation results.
+    #     """
+    #     try:
+    #         logging.info("Entered the start_model_evaluation method of TrainPipeline class")
+    #         model_evaluation_artifact = evaluate_model(
+    #             config=self.model_eval_config,
+    #             data_transformation_artifact=data_transformaion_artifact,
+    #             model_trainer_artifact=model_trainer_artifact
+    #         )
+    #         logging.info("Exited the start_model_evaluation method of TrainPipeline class")
+    #         return model_evaluation_artifact
+    #     except Exception as e:
+    #         raise MyException(e, sys) from e
+
     def run_pipeline(self) -> None:
         """
         Runs the full training/preprocessing pipeline.
@@ -152,6 +208,13 @@ class TrainPipeline:
                 splitter_artifact=data_splitter_artifact,
                 data_validation_artifact=data_validation_artifact
             )
+            model_trainer_artifact = self.start_model_trainer(
+                data_transformation_artifact=data_transformation_artifact
+            )
+            # model_evaluation_artifact = self.start_model_evaluation(
+            #     splitter_artifact=data_splitter_artifact,
+            #     model_trainer_artifact=model_trainer_artifact
+            # )
             logging.info("Entire pipeline run completed successfully.")
         except Exception as e:
             raise MyException(e, sys)

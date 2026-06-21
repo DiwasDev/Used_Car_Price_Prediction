@@ -24,6 +24,13 @@ class DataTransformationArtifact:
     transformed_test_file_path: str
 
 @dataclass
+class RegressionMetricArtifact:
+    r2_score: float
+    mae: float
+    mse: float
+    rmse: float
+
+@dataclass
 class ClassificationMetricArtifact:
     f1_score: float
     precision_score: float
@@ -32,7 +39,7 @@ class ClassificationMetricArtifact:
 @dataclass
 class ModelTrainerArtifact: 
     trained_model_file_path: str 
-    metric_artifact: ClassificationMetricArtifact
+    metric_artifact: RegressionMetricArtifact
 
 @dataclass
 class ModelEvaluationArtifact:
