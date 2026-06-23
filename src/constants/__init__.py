@@ -1,5 +1,6 @@
 import os
 from datetime import date
+from typing import Optional
 
 # For MongoDB connection
 DATABASE_NAME = "car_db"
@@ -21,9 +22,10 @@ TEST_FILE_NAME: str = "test.csv"
 SCHEMA_FILE_PATH = os.path.join("config", "schema.yaml")
 
 
-AWS_ACCESS_KEY_ID_ENV_KEY = "AWS_ACCESS_KEY_ID"
-AWS_SECRET_ACCESS_KEY_ENV_KEY = "AWS_SECRET_ACCESS_KEY"
-REGION_NAME = "us-east-1"
+# Replace your AWS S3 constants with Azure equivalents
+AZURE_STORAGE_CONNECTION_STRING = "AZURE_STORAGE_CONNECTION_STRING"
+AZURE_CONTAINER_NAME = "model-registry"
+# BLOB_PREFIX = "models"
 
 
 """
@@ -74,3 +76,19 @@ MODEL_PUSHER_S3_KEY = "model-registry"
 
 APP_HOST = "0.0.0.0"
 APP_PORT = 5000
+
+
+
+MODEL_EVALUATION_CHANGED_THRESHOLD_SCORE: float = 0.6
+
+# Azure blob equivalents of the AWS constants
+MODEL_CONTAINER_NAME: str = "model-registry"     # maps from MODEL_BUCKET_NAME
+MODEL_PUSHER_BLOB_PATH: str = "models"      # maps from MODEL_PUSHER_S3_KEY
+
+# Authentication (choose one)
+# 1) Connection string (recommended for local/dev)
+AZURE_STORAGE_CONNECTION_STRING: Optional[str] = os.getenv("AZURE_STORAGE_CONNECTION_STRING", "")
+
+# 2) Or account name + key (alternative)
+# AZURE_ACCOUNT_NAME: Optional[str] = os.getenv("AZURE_ACCOUNT_NAME", "")
+# AZURE_ACCOUNT_KEY: Optional[str] = os.getenv("AZURE_ACCOUNT_KEY", "")

@@ -6,9 +6,11 @@ from steps.ingest_data import ingest_data
 from steps.split_data import split_data
 from steps.transform_data import transform_data
 from steps.train_model import train_model
-# from steps.evaluate_model import evaluate_model
+from steps.evaluate_model import evaluate_model
 
 from src.components.data_validation import DataValidation
+
+from src.components.model_evaluation import ModelEvaluation
 
 from src.entity.config_entity import (
     DataIngestionConfig,
@@ -16,7 +18,7 @@ from src.entity.config_entity import (
     DataValidationConfig,
     DataTransformationConfig,
     ModelTrainerConfig,
-    # ModelEvaluationConfig,
+    ModelEvaluationConfig,
 )
                                           
 from src.entity.artifact_entity import (
@@ -25,7 +27,7 @@ from src.entity.artifact_entity import (
     DataValidationArtifact,
     DataTransformationArtifact,
     ModelTrainerArtifact,
-    # ModelEvaluationArtifact,
+    ModelEvaluationArtifact,
 )
 
 
@@ -50,7 +52,7 @@ class TrainPipeline:
             self.data_validation_config = DataValidationConfig()
             self.data_transformation_config = DataTransformationConfig()
             self.model_trainer_config = ModelTrainerConfig()
-            # self.model_eval_config = ModelEvaluationConfig()
+            self.model_eval_config = ModelEvaluationConfig()
         except Exception as e:
             raise MyException(e, sys)
 
@@ -163,32 +165,36 @@ class TrainPipeline:
         except Exception as e:
             raise MyException(e, sys) from e
 
-    # def start_model_evaluation(
-    #     self,
-    #     data_transformaion_artifact: DataTransformationArtifact,
-    #     model_trainer_artifact: ModelTrainerArtifact
-    # ) -> ModelEvaluationArtifact:
-    #     """
-    #     Runs the model evaluation step.
+    def start_model_evaluation(
+        self,
+        data_splitter_artifact: DataSplitterArtifact,
+        data_transformation_artifact: DataTransformationArtifact,
+        model_trainer_artifact: ModelTrainerArtifact
+    ) -> ModelEvaluationArtifact:
+        """
+        Runs the model evaluation step.
 
-    #     Parameters:
-    #         splitter_artifact: DataSplitterArtifact: Artifact from data splitting.
-    #         model_trainer_artifact: ModelTrainerArtifact: Artifact from model training.
+        Parameters:
+            data_splitter_artifact: DataSplitterArtifact: Artifact from data splitting.
+            data_transformation_artifact: DataTransformationArtifact: Artifact from data transformation.
+            model_trainer_artifact: ModelTrainerArtifact: Artifact from model training.
 
-    #     Returns:
-    #         artifact: ModelEvaluationArtifact: Artifact containing evaluation results.
-    #     """
-    #     try:
-    #         logging.info("Entered the start_model_evaluation method of TrainPipeline class")
-    #         model_evaluation_artifact = evaluate_model(
-    #             config=self.model_eval_config,
-    #             data_transformation_artifact=data_transformaion_artifact,
-    #             model_trainer_artifact=model_trainer_artifact
-    #         )
-    #         logging.info("Exited the start_model_evaluation method of TrainPipeline class")
-    #         return model_evaluation_artifact
-    #     except Exception as e:
-    #         raise MyException(e, sys) from e
+        Returns:
+            artifact: ModelEvaluationArtifact: Artifact containing evaluation results.
+        """
+        try:
+            logging.info("Entered the start_model_evaluation method of TrainPipeline class")
+            model_evaluation_artifact = ModelEvaluation(
+                 model_eval_config = self.model_eval_config,
+                 data_splitter_artifact = data_splitter_artifact,
+                 data_transformation_artifact = data_transformation_artifact,
+                 model_trainer_artifact = model_trainer_artifact
+            ).initiate_model_evaluation()
+            
+            logging.info("Exited the start_model_evaluation method of TrainPipeline class")
+            return model_evaluation_artifact
+        except Exception as e:
+            raise MyException(e, sys) from e
 
     def run_pipeline(self) -> None:
         """
@@ -211,10 +217,16 @@ class TrainPipeline:
             model_trainer_artifact = self.start_model_trainer(
                 data_transformation_artifact=data_transformation_artifact
             )
-            # model_evaluation_artifact = self.start_model_evaluation(
-            #     splitter_artifact=data_splitter_artifact,
-            #     model_trainer_artifact=model_trainer_artifact
-            # )
+            model_evaluation_artifact = self.start_model_evaluation(
+                # model_eval_config=self.model_eval_config,
+                data_splitter_artifact=data_splitter_artifact,
+                data_transformation_artifact=data_transformation_artifact,
+                model_trainer_artifact=model_trainer_artifact
+            )
+
+            if not model_evaluation_artifact.is_model_accepted:
+                logging.info(f"Model not accepted.")
+                return None
             logging.info("Entire pipeline run completed successfully.")
         except Exception as e:
             raise MyException(e, sys)

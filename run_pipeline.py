@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 from training_pipeline import run_training_pipeline
-from steps.build_model import build_modelp
+from steps.build_model import build_model
 import pandas as pd
 from steps.evaluate import evaluate_model_step
 
