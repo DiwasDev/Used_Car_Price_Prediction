@@ -26,6 +26,9 @@ logger = logging.getLogger(__name__)
 class ImputationStrategy(ABC):
     """Strategy interface for a single imputation operation."""
 
+    def fit(self, df: pd.DataFrame) -> ImputationStrategy:
+        return self
+
     @abstractmethod
     def impute(self, df: pd.DataFrame) -> pd.DataFrame:
         ...
@@ -34,17 +37,25 @@ class ImputationStrategy(ABC):
 class EngineHPImputer(ImputationStrategy):
     """Fill missing engine_hp with brand median, then global median."""
 
+    def __init__(self) -> None:
+        self.brand_medians_ = {}
+        self.global_median_ = np.nan
+
+    def fit(self, df: pd.DataFrame) -> EngineHPImputer:
+        try:
+            self.brand_medians_ = df.groupby("brand")["engine_hp"].median().to_dict()
+            self.global_median_ = float(df["engine_hp"].median())
+            return self
+        except Exception as e:
+            logger.error("Error in EngineHPImputer.fit: %s", e)
+            raise e
+
     def impute(self, df: pd.DataFrame) -> pd.DataFrame:
         try:
             df = df.copy()
-
-            ## Grouping with brands median hp
-            df["engine_hp"] = df.groupby("brand")["engine_hp"].transform(
-                lambda x: x.fillna(x.median())
-            )
-
-            ## Fall back with global median hp
-            df["engine_hp"] = df["engine_hp"].fillna(df["engine_hp"].median())
+            # Map brand to its median hp
+            brand_median_series = df["brand"].map(self.brand_medians_)
+            df["engine_hp"] = df["engine_hp"].fillna(brand_median_series).fillna(self.global_median_)
             return df
         except Exception as e:
             logger.error("Error in EngineHPImputer.impute: %s", e)
@@ -76,18 +87,26 @@ class EVFuelDisplacementImputer(ImputationStrategy):
 class BrandHPNeighborDisplacementImputer(ImputationStrategy):
     """Fill displacement using same-brand vehicles with matching horsepower."""
 
+    def __init__(self) -> None:
+        self.brand_hp_medians_ = {}
+        self.global_median_ = np.nan
+
+    def fit(self, df: pd.DataFrame) -> BrandHPNeighborDisplacementImputer:
+        try:
+            self.brand_hp_medians_ = df.groupby(["brand", "engine_hp"])["engine_displacement"].median().to_dict()
+            self.global_median_ = float(df["engine_displacement"].median())
+            return self
+        except Exception as e:
+            logger.error("Error in BrandHPNeighborDisplacementImputer.fit: %s", e)
+            raise e
+
     def impute(self, df: pd.DataFrame) -> pd.DataFrame:
         try:
             df = df.copy()
-            brand_hp_map = df.groupby(["brand", "engine_hp"])[
-                "engine_displacement"
-            ].transform("median")
-            df["engine_displacement"] = df["engine_displacement"].fillna(brand_hp_map)
-
-            # Fall back
-            df["engine_displacement"] = df["engine_displacement"].fillna(
-                df["engine_displacement"].median()
-            )
+            # Map brand and hp to median displacement
+            keys = list(zip(df["brand"], df["engine_hp"]))
+            mapped_displacement = pd.Series([self.brand_hp_medians_.get(k, np.nan) for k in keys], index=df.index)
+            df["engine_displacement"] = df["engine_displacement"].fillna(mapped_displacement).fillna(self.global_median_)
             return df
         except Exception as e:
             logger.error("Error in BrandHPNeighborDisplacementImputer.impute: %s", e)
@@ -97,20 +116,29 @@ class BrandHPNeighborDisplacementImputer(ImputationStrategy):
 class FuelTypeBrandModeImputer(ImputationStrategy):
     """Fill missing fuel_type with the brand's most common fuel type."""
 
+    def __init__(self) -> None:
+        self.brand_modes_ = {}
+        self.global_mode_ = "Gasoline"
+
+    def fit(self, df: pd.DataFrame) -> FuelTypeBrandModeImputer:
+        try:
+            self.brand_modes_ = {}
+            for brand, group in df.groupby("brand"):
+                modes = group["fuel_type"].mode()
+                if not modes.empty:
+                    self.brand_modes_[brand] = modes.iloc[0]
+            global_modes = df["fuel_type"].mode()
+            self.global_mode_ = global_modes.iloc[0] if not global_modes.empty else "Gasoline"
+            return self
+        except Exception as e:
+            logger.error("Error in FuelTypeBrandModeImputer.fit: %s", e)
+            raise e
+
     def impute(self, df: pd.DataFrame) -> pd.DataFrame:
         try:
             df = df.copy()
-
-            ## Impute missing fuel_type with the brand's most common fuel type
-            brand_mode = df.groupby("brand")["fuel_type"].transform(
-                lambda x: x.fillna(
-                    x.mode()[0] if not x.mode().empty else "Gasoline"
-                )
-            )
-
-            mode_fuel_type = df['fuel_type'].mode()
-            df["fuel_type"] = df["fuel_type"].fillna(brand_mode).fillna(mode_fuel_type)
-            
+            brand_mode_series = df["brand"].map(self.brand_modes_)
+            df["fuel_type"] = df["fuel_type"].fillna(brand_mode_series).fillna(self.global_mode_)
             return df
         except Exception as e:
             logger.error("Error in FuelTypeBrandModeImputer.impute: %s", e)
@@ -129,8 +157,30 @@ class DisplacementHPBinImputer(ImputationStrategy):
     def __init__(self, n_bins: int = 15) -> None:
         try:
             self.n_bins = n_bins
+            self.hp_bin_edges_ = None
+            self.brand_bin_medians_ = {}
+            self.bin_medians_ = {}
+            self.global_median_ = np.nan
         except Exception as e:
             logger.error("Error in DisplacementHPBinImputer.__init__: %s", e)
+            raise e
+
+    def fit(self, df: pd.DataFrame) -> DisplacementHPBinImputer:
+        try:
+            self.global_median_ = float(df["engine_displacement"].median())
+            if "engine_hp" in df.columns and df["engine_hp"].notna().any():
+                non_null_hp = df["engine_hp"].dropna()
+                if len(non_null_hp) > 0:
+                    _, bin_edges = pd.qcut(non_null_hp, q=self.n_bins, retbins=True, duplicates="drop")
+                    self.hp_bin_edges_ = bin_edges
+                    
+                    df_copy = df.copy()
+                    df_copy["hp_bin"] = pd.cut(df_copy["engine_hp"], bins=self.hp_bin_edges_, labels=False, include_lowest=True)
+                    self.brand_bin_medians_ = df_copy.groupby(["brand", "hp_bin"])["engine_displacement"].median().to_dict()
+                    self.bin_medians_ = df_copy.groupby("hp_bin")["engine_displacement"].median().to_dict()
+            return self
+        except Exception as e:
+            logger.error("Error in DisplacementHPBinImputer.fit: %s", e)
             raise e
 
     def impute(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -141,42 +191,30 @@ class DisplacementHPBinImputer(ImputationStrategy):
             is_ev = df["brand"].astype(str).str.lower().str.strip().isin(EV_BRANDS)
             df.loc[is_ev & df["engine_displacement"].isna(), "engine_displacement"] = 0.0
 
-            if "engine_hp" not in df.columns or not df["engine_hp"].notna().any():
-                df["engine_displacement"] = df["engine_displacement"].fillna(
-                    df["engine_displacement"].median()
-                )
+            if self.hp_bin_edges_ is None or "engine_hp" not in df.columns or not df["engine_hp"].notna().any():
+                df["engine_displacement"] = df["engine_displacement"].fillna(self.global_median_)
                 return df
 
             ## Binning with hp_bin
-            df["hp_bin"] = pd.qcut(
-                df["engine_hp"], q=self.n_bins, labels=False, duplicates="drop"
-            )
+            df["hp_bin"] = pd.cut(df["engine_hp"], bins=self.hp_bin_edges_, labels=False, include_lowest=True)
 
             ## Brand + hp_bin median displacement
-            brand_bin_map = df.groupby(["brand", "hp_bin"])[
-                "engine_displacement"
-            ].transform("median")
-            df["engine_displacement"] = df["engine_displacement"].fillna(brand_bin_map)
+            keys = list(zip(df["brand"], df["hp_bin"]))
+            brand_bin_displacement = pd.Series([self.brand_bin_medians_.get(k, np.nan) for k in keys], index=df.index)
+            df["engine_displacement"] = df["engine_displacement"].fillna(brand_bin_displacement)
 
             ## Global bin median displacement fallback          
-            global_bin_map = df.groupby("hp_bin")["engine_displacement"].transform(
-                "median"
-            )
-            df["engine_displacement"] = df["engine_displacement"].fillna(global_bin_map)
+            global_bin_displacement = df["hp_bin"].map(self.bin_medians_)
+            df["engine_displacement"] = df["engine_displacement"].fillna(global_bin_displacement)
 
             ## Global median fallback   
-            df["engine_displacement"] = df["engine_displacement"].fillna(
-                df["engine_displacement"].median()
-            )
+            df["engine_displacement"] = df["engine_displacement"].fillna(self.global_median_)
             return df.drop(columns=["hp_bin"])
         except Exception as e:
             logger.error("Error in DisplacementHPBinImputer.impute: %s", e)
             raise e
-        
 
 
-
-## Just if we wnat to reutrn default pattern of cleanign pipeline
 class MissingValueHandlerFactory:
     """Factory for assembling the default missing value handling strategy chain."""
 
@@ -205,6 +243,17 @@ class MissingValueHandler(BaseTransformer):
             self.strategies = strategies or MissingValueHandlerFactory.create_default()
         except Exception as e:
             logger.error("Error in MissingValueHandler.__init__: %s", e)
+            raise e
+
+    def fit(self, df: pd.DataFrame, y: pd.Series | None = None) -> MissingValueHandler:
+        try:
+            current = df.copy()
+            for strategy in self.strategies:
+                strategy.fit(current)
+                current = strategy.impute(current)
+            return self
+        except Exception as e:
+            logger.error("Error in MissingValueHandler.fit: %s", e)
             raise e
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:

@@ -19,22 +19,33 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="brand">Brand</label>
-                        <input type="text" id="brand" name="brand" placeholder="e.g., Ford, Lexus, Audi" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="model">Model</label>
-                        <input type="text" id="model" name="model" placeholder="e.g., RX 350, Palisade SEL" required>
+                        <select id="brand" name="brand" required>
+                            <option value="">Select Brand</option>
+                            {% for b in brands %}
+                                <option value="{{ b }}">{{ b }}</option>
+                            {% endfor %}
+                            <option value="Other">Other / Unknown</option>
+                        </select>
                     </div>
 
                     <div class="form-group">
                         <label for="model_year">Model Year</label>
-                        <input type="number" id="model_year" name="model_year" min="1900" max="2027" placeholder="e.g., 2021" required>
+                        <input type="number" id="model_year" name="model_year" min="1900" max="2027" placeholder="e.g., 2022" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="milage">Mileage (e.g., "51,000 mi." or numeric)</label>
-                        <input type="text" id="milage" name="milage" placeholder="e.g., 51,000 mi." required>
+                        <label for="mileage_num">Mileage (numeric)</label>
+                        <input type="number" id="mileage_num" name="mileage_num" min="0" placeholder="e.g., 15000" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="engine_hp">Engine Horsepower (HP)</label>
+                        <input type="number" id="engine_hp" name="engine_hp" min="0" step="any" placeholder="e.g., 228" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="engine_displacement">Engine Displacement (Liters)</label>
+                        <input type="number" id="engine_displacement" name="engine_displacement" min="0" step="any" placeholder="e.g., 2.4" required>
                     </div>
 
                     <div class="form-group">
@@ -51,38 +62,84 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="engine">Engine Description</label>
-                        <input type="text" id="engine" name="engine" placeholder="e.g., 3.5L V6 or 300.0HP 3.7L" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="transmission">Transmission</label>
-                        <input type="text" id="transmission" name="transmission" placeholder="e.g., 6-Speed A/T, Automatic" required>
+                        <label for="transmission_type">Transmission Type</label>
+                        <select id="transmission_type" name="transmission_type" required>
+                            <option value="">Select Transmission Type</option>
+                            <option value="a/t">Automatic</option>
+                            <option value="CVT">CVT</option>
+                            <option value="Manual">Manual</option>
+                        </select>
                     </div>
 
                     <div class="form-group">
                         <label for="ext_col">Exterior Color</label>
-                        <input type="text" id="ext_col" name="ext_col" placeholder="e.g., Black, Glacier White Metallic" required>
+                        <select id="ext_col" name="ext_col" required>
+                            <option value="">Select Exterior Color</option>
+                            <option value="Black">Black</option>
+                            <option value="Beige">Beige</option>
+                            <option value="Gray">Gray</option>
+                            <option value="Brown">Brown</option>
+                            <option value="Red">Red</option>
+                            <option value="Blue">Blue</option>
+                            <option value="Orange">Orange</option>
+                            <option value="White">White</option>
+                            <option value="nan">Other / Unknown</option>
+                        </select>
                     </div>
 
                     <div class="form-group">
                         <label for="int_col">Interior Color</label>
-                        <input type="text" id="int_col" name="int_col" placeholder="e.g., Black, Gray, Ebony" required>
+                        <select id="int_col" name="int_col" required>
+                            <option value="">Select Interior Color</option>
+                            <option value="Black">Black</option>
+                            <option value="Beige">Beige</option>
+                            <option value="Gray">Gray</option>
+                            <option value="Brown">Brown</option>
+                            <option value="Red">Red</option>
+                            <option value="Blue">Blue</option>
+                            <option value="Orange">Orange</option>
+                            <option value="White">White</option>
+                            <option value="nan">Other / Unknown</option>
+                        </select>
                     </div>
 
-                    <div class="form-group">
+                <div class="form-group">
                         <label for="accident">Accident History</label>
                         <select id="accident" name="accident" required>
-                            <option value="None reported">None reported</option>
-                            <option value="At least 1 accident or damage reported">At least 1 accident or damage reported</option>
+                            <option value="0">No accidents reported</option>
+                            <option value="1">At least 1 accident/damage reported</option>
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label for="clean_title">Clean Title?</label>
                         <select id="clean_title" name="clean_title" required>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No / Not Specified</option>
+                            <option value="1">Yes</option>
+                            <option value="0">No / Not Specified</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="is_sport">Sport Features?</label>
+                        <select id="is_sport" name="is_sport" required>
+                            <option value="0">No</option>
+                            <option value="1">Yes (Sport, S-Line, M Sport)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="is_premium">Premium Features?</label>
+                        <select id="is_premium" name="is_premium" required>
+                            <option value="0">No</option>
+                            <option value="1">Yes (Premium, Platinum, Limited)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="is_4WD_AWD">4WD / AWD?</label>
+                        <select id="is_4WD_AWD" name="is_4WD_AWD" required>
+                            <option value="0">No</option>
+                            <option value="1">Yes (4WD, AWD, xDrive, Quattro)</option>
                         </select>
                     </div>
                 </div>

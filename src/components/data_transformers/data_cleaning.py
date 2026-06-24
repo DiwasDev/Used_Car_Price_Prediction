@@ -67,7 +67,7 @@ class MileageCleaningStrategy(CleaningStrategy):
             df[self.TARGET_COL] = (
                 df[self.SOURCE_COL]
                 .str.replace(r"[,]", "", regex=True)
-                .str.replace(r"\s*mi\.\s*$", "", regex=True)
+                .str.replace(r"\s*mi\.?\s*$", "", regex=True)
                 .str.strip()
                 .pipe(pd.to_numeric, errors="coerce")
             )
