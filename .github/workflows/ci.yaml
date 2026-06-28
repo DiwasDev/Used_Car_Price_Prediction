@@ -52,6 +52,9 @@ jobs:
           docker stop car-app || true
           docker rm car-app || true
           
+          # Pull the fresh image from the registry
+          docker pull $ACR_SERVER/$REPOSITORY:$IMAGE_TAG
+          
           # Run the fresh container
           docker run -d \
             --name car-app \
