@@ -227,6 +227,6 @@ class TrainPipeline:
             if not model_evaluation_artifact.is_model_accepted:
                 logging.info(f"Model not accepted.")
                 return None
-            logging.info("Entire pipeline run completed successfully.")
+            logging.info("Entire training pipeline run completed successfully.")
         except Exception as e:
             raise MyException(e, sys)

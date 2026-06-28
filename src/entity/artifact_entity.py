@@ -50,5 +50,5 @@ class ModelEvaluationArtifact:
 
 @dataclass
 class ModelPusherArtifact:
-    bucket_name: str
-    s3_model_path: str
+    container_name: str
+    azure_blob_path: str

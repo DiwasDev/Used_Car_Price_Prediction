@@ -25,7 +25,7 @@ SCHEMA_FILE_PATH = os.path.join("config", "schema.yaml")
 # Replace your AWS S3 constants with Azure equivalents
 AZURE_STORAGE_CONNECTION_STRING = "AZURE_STORAGE_CONNECTION_STRING"
 AZURE_CONTAINER_NAME = "model-registry"
-# BLOB_PREFIX = "models"
+BLOB_PREFIX = "models"
 
 
 """
