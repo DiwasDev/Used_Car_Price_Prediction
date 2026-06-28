@@ -33,6 +33,7 @@ dependencies = [
     "jinja2",
     "pydantic",
     "requests==2.34.2",
+    "python-multipart",
 ]
 
 [tool.setuptools]
