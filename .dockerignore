@@ -1,0 +1,50 @@
+# Virtual Environments
+venv/
+.venv/
+env/
+
+# Python Cache and Compiled Files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Version Control
+.git/
+.gitignore
+.gitattributes
+
+# Data, Artifacts, and Logs
+data/
+artifact/
+logs/
+*.log
+
+# Jupyter Notebook Checkpoints & Notebooks
+.ipynb_checkpoints/
+notebooks/
+
+# IDE/Editor Configurations
+.vscode/
+.idea/
+.DS_Store
+
+# Build and Packaging Metadata
+*.egg-info/
+build/
+dist/
+
+# Testing & Code Quality
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Agent & Pipeline Metadata
+AGENTS.md
+.aigignore
+plan.txt
+
+# Docker Configuration Files
+Dockerfile
+.dockerignore

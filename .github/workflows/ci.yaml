@@ -1,0 +1,61 @@
+name: Deploy Application Docker Image to Azure VM
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  Continuous-Integration:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Log in to Azure Container Registry (ACR)
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.AZURE_ACR_NAME }}.azurecr.io
+          username: ${{ secrets.AZURE_CLIENT_ID }}
+          password: ${{ secrets.AZURE_CLIENT_SECRET }}
+
+      - name: Build, Tag, and Push Image to ACR
+        env:
+          ACR_SERVER: ${{ secrets.AZURE_ACR_NAME }}.azurecr.io
+          REPOSITORY: ${{ secrets.AZURE_REGISTRY_REPO }} # e.g., vehicle-predictor
+          IMAGE_TAG: latest
+        run: |
+          docker build -t $ACR_SERVER/$REPOSITORY:$IMAGE_TAG .    
+          docker push $ACR_SERVER/$REPOSITORY:$IMAGE_TAG
+
+  Continuous-Deployment:
+    needs: Continuous-Integration
+    runs-on: self-hosted
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Log in to Azure Container Registry on Target VM
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.AZURE_ACR_NAME }}.azurecr.io
+          username: ${{ secrets.AZURE_CLIENT_ID }}
+          password: ${{ secrets.AZURE_CLIENT_SECRET }}
+
+      - name: Pull and Run Fresh Docker Image
+        env:
+          ACR_SERVER: ${{ secrets.AZURE_ACR_NAME }}.azurecr.io
+          REPOSITORY: ${{ secrets.AZURE_REGISTRY_REPO }}
+          IMAGE_TAG: latest
+        run: |
+          # Stop and remove the old container if it exists, so the port is freed
+          docker stop car-app || true
+          docker rm car-app || true
+          
+          # Run the fresh container
+          docker run -d \
+            --name car-app \
+            -e MONGODB_URL="${{ secrets.MONGODB_URL }}" \
+            -e AZURE_STORAGE_CONNECTION_STRING="${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" \
+            -p 5000:5000 \
+            $ACR_SERVER/$REPOSITORY:$IMAGE_TAG
