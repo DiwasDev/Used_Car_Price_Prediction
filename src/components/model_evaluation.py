@@ -72,8 +72,14 @@ class ModelEvaluation:
                 logging.info(f"No blobs found with prefix '{blob_prefix}' in container '{container_name}'.")
                 return None
 
-            # Select the latest blob by last_modified time
-            latest_blob = max(blobs, key=lambda b: b.last_modified)
+            # Select the latest model blob by last_modified time
+            from src.constants import MODEL_FILE_NAME
+            model_blobs = [blob for blob in blobs if blob.name.endswith(MODEL_FILE_NAME)]
+            if not model_blobs:
+                logging.info(f"No model blobs found with prefix '{blob_prefix}' in container '{container_name}'.")
+                return None
+
+            latest_blob = max(model_blobs, key=lambda b: b.last_modified)
             logging.info(f"Found production model blob: {latest_blob.name} (last_modified={latest_blob.last_modified})")
 
             # Download blob into memory and load the model object (joblib/pickle)
@@ -101,7 +107,11 @@ class ModelEvaluation:
             best_model = self.get_best_model()
             if best_model is not None:
                 logging.info("Computing r2_score for production model...")
-                y_hat_best_model = best_model.predict(X_test)    ## todo: fix this
+                if hasattr(best_model, "trained_model_object"):
+                    y_hat_best_model = best_model.trained_model_object.predict(pd.DataFrame(X_test))
+                else:
+                    test_df = pd.read_csv(self.data_splitter_artifact.test_file_path)
+                    y_hat_best_model = best_model.predict(test_df)
                 best_model_r2_score = float(r2_score(y_test, y_hat_best_model))
                 logging.info(
                     f"r2_score-Production Model: {best_model_r2_score}, r2_score-New Trained Model: {trained_model_r2_score}"

@@ -5,7 +5,11 @@ from src.logger import logging
 from src.pipline.training_pipeline import TrainPipeline
 from src.components.model_pusher import ModelPusher
 from src.entity.config_entity import ModelPusherConfig
-from src.entity.artifact_entity import ModelTrainerArtifact, ModelPusherArtifact
+from src.entity.artifact_entity import (
+    ModelTrainerArtifact,
+    ModelPusherArtifact,
+    DataTransformationArtifact,
+)
 
 class DeploymentPipeline(TrainPipeline):
     """
@@ -40,6 +44,27 @@ class DeploymentPipeline(TrainPipeline):
                 model_trainer_artifact=model_trainer_artifact
             )
             logging.info("Exited the start_model_pusher method of DeploymentPipeline class")
+            return model_pusher_artifact
+        except Exception as e:
+            raise MyException(e, sys) from e
+
+    def start_transformation_pusher(
+        self,
+        data_transformation_artifact: DataTransformationArtifact,
+        model_pusher_artifact: ModelPusherArtifact,
+    ) -> ModelPusherArtifact:
+        """
+        Runs the transformation pusher step to upload preprocessing.pkl and
+        inference_meta.json to Azure Blob Storage.
+        """
+        try:
+            logging.info("Entered the start_transformation_pusher method of DeploymentPipeline class")
+            model_pusher = ModelPusher(model_pusher_config=self.model_pusher_config)
+            model_pusher_artifact = model_pusher.push_transformation_artifacts(
+                data_transformation_artifact=data_transformation_artifact,
+                model_pusher_artifact=model_pusher_artifact,
+            )
+            logging.info("Exited the start_transformation_pusher method of DeploymentPipeline class")
             return model_pusher_artifact
         except Exception as e:
             raise MyException(e, sys) from e
@@ -95,6 +120,13 @@ class DeploymentPipeline(TrainPipeline):
             model_pusher_artifact = self.start_model_pusher(
                 model_trainer_artifact=model_trainer_artifact
             )
+
+            # Step 9: Deploy transformation artifacts
+            model_pusher_artifact = self.start_transformation_pusher(
+                data_transformation_artifact=data_transformation_artifact,
+                model_pusher_artifact=model_pusher_artifact,
+            )
+
             logging.info("DeploymentPipeline execution completed successfully.")
             return model_pusher_artifact
             

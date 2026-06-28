@@ -52,3 +52,5 @@ class ModelEvaluationArtifact:
 class ModelPusherArtifact:
     container_name: str
     azure_blob_path: str
+    preprocessing_blob_path: str = ""
+    inference_meta_blob_path: str = ""

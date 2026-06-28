@@ -84,6 +84,8 @@ MODEL_EVALUATION_CHANGED_THRESHOLD_SCORE: float = 0.6
 # Azure blob equivalents of the AWS constants
 MODEL_CONTAINER_NAME: str = "model-registry"     # maps from MODEL_BUCKET_NAME
 MODEL_PUSHER_BLOB_PATH: str = "models"      # maps from MODEL_PUSHER_S3_KEY
+TRANSFORMATION_PUSHER_BLOB_PATH: str = "transformation"
+INFERENCE_META_FILE_NAME: str = "inference_meta.json"
 
 # Authentication (choose one)
 # 1) Connection string (recommended for local/dev)

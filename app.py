@@ -1,5 +1,3 @@
-import os
-import json
 from typing import List
 
 from fastapi import FastAPI, Request, HTTPException, status, Depends, Form
@@ -12,7 +10,7 @@ from uvicorn import run as app_run
 
 # Importing constants and pipeline modules from the project
 from src.constants import APP_HOST, APP_PORT
-from src.pipline.prediction_pipeline import VehicleData, VehiclePredictor, sync_latest_artifact
+from src.pipline.prediction_pipeline import VehicleData, VehiclePredictor
 from src.pipline.training_pipeline import TrainPipeline
 
 # Initialize FastAPI application
@@ -46,12 +44,12 @@ def get_brand_list() -> List[str]:
     Falls back to a default list upon failure.
     """
     try:
-        sync_latest_artifact()
-        meta_path = os.path.join("artifact", "latest_artifact", "data_transformation", "transformation_object", "inference_meta.json")
-        if os.path.exists(meta_path):
-            with open(meta_path, "r") as f:
-                meta = json.load(f)
-            return sorted([b for b in meta.get("target_encodings", {}).get("brand", {}).keys() if b != "__global_fallback__"])
+        predictor = VehiclePredictor()
+        meta = predictor.pull_inference_meta()
+        return sorted([
+            brand for brand in meta.get("target_encodings", {}).get("brand", {}).keys()
+            if brand != "__global_fallback__"
+        ])
     except Exception as e:
         print(f"Error loading brands: {e}")
     return ["BMW", "Ford", "Toyota", "Lexus", "Audi", "Subaru", "Chevrolet"]

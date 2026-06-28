@@ -1,14 +1,15 @@
 import os
+import json
 import tempfile
 from io import BytesIO
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 import joblib
 
 from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
 from azure.storage.blob import BlobProperties, BlobServiceClient
 
 from src.configuration.azure_connection import AzureConnection
-from src.constants import MODEL_CONTAINER_NAME, MODEL_PUSHER_BLOB_PATH
+from src.constants import MODEL_CONTAINER_NAME, MODEL_PUSHER_BLOB_PATH, TRANSFORMATION_PUSHER_BLOB_PATH
 # Import your custom logging utility
 from src.logger import logging
 
@@ -151,3 +152,25 @@ class AzureEstimator:
         
         logger.info("Model object successfully deserialized.")
         return model
+
+    def download_blob_json(self, blob_name: str, container_name: str = MODEL_CONTAINER_NAME) -> Dict[str, Any]:
+        """Downloads a JSON blob directly into memory and parses it."""
+        logger.info(f"Downloading JSON blob '{blob_name}' from container '{container_name}'...")
+        blob_client = self.client.get_blob_client(container=container_name, blob=blob_name)
+
+        buffer = BytesIO()
+        blob_client.download_blob().download_to_stream(buffer)
+        buffer.seek(0)
+
+        logger.info("In-memory download complete. Parsing JSON payload...")
+        return json.load(buffer)
+
+    def download_preprocessing_object(
+        self, blob_name: str, container_name: str = MODEL_CONTAINER_NAME
+    ) -> Any:
+        """Downloads and deserializes a preprocessing pickle blob."""
+        return self.download_model_object(blob_name=blob_name, container_name=container_name)
+
+    def get_transformation_blob_name(self, file_name: str) -> str:
+        """Returns the blob path for a transformation artifact under the transformation prefix."""
+        return f"{TRANSFORMATION_PUSHER_BLOB_PATH}/{file_name}"
