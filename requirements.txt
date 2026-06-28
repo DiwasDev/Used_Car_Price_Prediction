@@ -1,18 +1,18 @@
-pandas==3.0.3
-numpy==2.4.6
-scikit-learn==1.9.0
-category_encoders==2.9.0
-certifi==2026.5.20
-pymongo
-azure-storage-blob
-dill
-PyYAML==6.0.3
-from-root
-joblib==1.5.3
-python-dotenv==1.2.2
-fastapi
-uvicorn
-jinja2
-pydantic
-requests==2.34.2
--e .
+# pandas==3.0.3
+# numpy==2.4.6
+# scikit-learn==1.9.0
+# category_encoders==2.9.0
+# certifi==2026.5.20
+# pymongo
+# azure-storage-blob
+# dill
+# PyYAML==6.0.3
+# from-root
+# joblib==1.5.3
+# python-dotenv==1.2.2
+# fastapi
+# uvicorn
+# jinja2
+# pydantic
+# requests==2.34.2
+# -e .

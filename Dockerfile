@@ -7,21 +7,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements.txt first to leverage Docker cache
-COPY requirements.txt .
+# Copy packaging and requirements files
+COPY pyproject.toml setup.py requirements.txt README.md ./
+COPY src/ ./src/
 
-# Install dependencies
+# Install dependencies (including the editable package installation)
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code
+# Copy the rest of the application
 COPY . .
 
-# Expose the port the app runs on
+# Expose port
 EXPOSE 5000
 
-# Set environment variables (can be overridden at runtime)
+# Environment variables
 ENV MONGODB_URL=""
 ENV AZURE_STORAGE_CONNECTION_STRING=""
 
-# Command to run the application
+# Run application
 CMD ["python", "app.py"]

@@ -31,7 +31,6 @@ notebooks/
 .DS_Store
 
 # Build and Packaging Metadata
-*.egg-info/
 build/
 dist/
 
@@ -44,6 +43,10 @@ htmlcov/
 AGENTS.md
 .aigignore
 plan.txt
+
+# GitHub Actions Runner
+actions-runner/
+.github/
 
 # Docker Configuration Files
 Dockerfile

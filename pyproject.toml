@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "used-car-price-prediction"
+version = "0.0.1"
+description = "Used Car &  Price Prediction ML Pipeline"
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [
+    { name = "Diwas Pathak", email = "diwas.devs@gmail.com" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "pandas==3.0.3",
+    "numpy==2.4.6",
+    "scikit-learn==1.9.0",
+    "category_encoders==2.9.0",
+    "certifi==2026.5.20",
+    "pymongo",
+    "azure-storage-blob",
+    "dill",
+    "PyYAML==6.0.3",
+    "from-root",
+    "joblib==1.5.3",
+    "python-dotenv==1.2.2",
+    "fastapi",
+    "uvicorn",
+    "jinja2",
+    "pydantic",
+    "requests==2.34.2",
+]
+
+[tool.setuptools]
+packages = ["src"]
