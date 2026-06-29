@@ -2,6 +2,8 @@
 
 > An end-to-end machine learning system — not a notebook — that ingests, validates, trains, evaluates, and serves used car price predictions, built the way a real business would need it to run.
 
+
+
 [![Python](https://img.shields.io/badge/python-3.12-blue.svg)](#)
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](#)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#) <!-- TODO: change if you pick a different license -->
@@ -22,8 +24,11 @@ The result is a system with proper data validation, swappable preprocessing stra
 
 ## Demo
 
-Demo URL : [http://car-price.ddns.net](http://car-price.ddns.net)
+## Demo
 
+Demo URL: [http://car-price.ddns.net](http://car-price.ddns.net)
+
+[![Watch the Demo video](https://img.youtube.com/vi/PLpQoS2NfBU/maxresdefault.jpg)](https://youtu.be/PLpQoS2NfBU)
 ---
 
 ## Architecture
