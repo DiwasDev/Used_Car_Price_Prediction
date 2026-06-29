@@ -109,15 +109,17 @@ class ColorMappingStep(FeatureStep):
                 ## Categorize colors using regex conditions
                 conditions = [
                     clean.str.contains(p, regex=True) for p in self._CONDITIONS
-                ] + [clean == None]
-  
+                ] + [clean.isna()]  # FIXED: Changed from clean == None to clean.isna()
+   
 
                 # Find most frequent color
                 mode_color = clean.mode()
 
-                ## Assign colors to buckets, 
-                df[col] = np.select(conditions, self._CHOICES, default= None)
-                df[col].fillna(df[col].mode())
+                ## Assign colors to buckets
+                df[col] = np.select(conditions, self._CHOICES, default=None)
+                # FIXED: Properly assign the fillna result back to df[col]
+                if len(mode_color) > 0:
+                    df[col] = df[col].fillna(mode_color[0])
                 
             return df
         except Exception as e:
@@ -165,9 +167,9 @@ class TransmissionFeatureStep(FeatureStep):
             
             mode_transmisson_type = raw.mode()
             df["transmission_type"] = np.select(
-                [is_cvt, is_manual, is_auto, raw == None],
+                [is_cvt, is_manual, is_auto, raw.isna()],  # FIXED: Changed from raw == None to raw.isna()
                 ["CVT", "Manual", "Automatic", None],
-                default= mode_transmisson_type,  # Assign Automatic as default transmission type
+                default="Automatic" if len(mode_transmisson_type) == 0 else mode_transmisson_type[0],  # FIXED: Provide proper default
             )
 
                 # # Extract transmission gears
@@ -245,7 +247,7 @@ class EngineSpecFeatureStep(FeatureStep):
                     is_diesel,
                     is_flex,
                     is_gasoline,
-                    raw == None,
+                    raw.isna(),  # FIXED: Changed from raw == None to raw.isna()
                 ],
                 ["Electric", "Hybrid", "Diesel", "Flex Fuel", "Gasoline", None],
                 default=None,
