@@ -107,9 +107,10 @@ class ColorMappingStep(FeatureStep):
                 )
 
                 ## Categorize colors using regex conditions
+                # FIXED: Fill NaN values in conditions with False to avoid np.select errors
                 conditions = [
-                    clean.str.contains(p, regex=True) for p in self._CONDITIONS
-                ] + [clean.isna()]  # FIXED: Changed from clean == None to clean.isna()
+                    clean.str.contains(p, regex=True).fillna(False) for p in self._CONDITIONS
+                ] + [clean.isna()]
    
 
                 # Find most frequent color
@@ -159,17 +160,18 @@ class TransmissionFeatureStep(FeatureStep):
                 index=df.index,
             )
 
-            is_cvt = raw.str.contains(r"cvt|variable")
-            is_manual = raw.str.contains(r"m/t|manual|mt")
+            # FIXED: Fill NaN values in conditions with False
+            is_cvt = raw.str.contains(r"cvt|variable").fillna(False)
+            is_manual = raw.str.contains(r"m/t|manual|mt").fillna(False)
             is_auto = raw.str.contains(
                 r"a/t|automatic|auto|at|pdk|dct|steptronic|tronic|shift"
-            )
+            ).fillna(False)
             
             mode_transmisson_type = raw.mode()
             df["transmission_type"] = np.select(
-                [is_cvt, is_manual, is_auto, raw.isna()],  # FIXED: Changed from raw == None to raw.isna()
+                [is_cvt, is_manual, is_auto, raw.isna()],
                 ["CVT", "Manual", "Automatic", None],
-                default="Automatic" if len(mode_transmisson_type) == 0 else mode_transmisson_type[0],  # FIXED: Provide proper default
+                default="Automatic" if len(mode_transmisson_type) == 0 else mode_transmisson_type[0],
             )
 
                 # # Extract transmission gears
@@ -232,13 +234,14 @@ class EngineSpecFeatureStep(FeatureStep):
             # )
 
             # Extract fuel type from engine
+            # FIXED: Fill NaN values in conditions with False
             is_electric = raw.str.contains(
                 r"Electric Motor|Electric Fuel|Electric", flags=re.IGNORECASE
-            )
-            is_hybrid = raw.str.contains(r"Hybrid|Plug-In", flags=re.IGNORECASE)
-            is_diesel = raw.str.contains(r"Diesel", flags=re.IGNORECASE)
-            is_flex = raw.str.contains(r"Flex Fuel|Flexible", flags=re.IGNORECASE)
-            is_gasoline = raw.str.contains(r"Gasoline|Gas|GDI|MPFI", flags=re.IGNORECASE)
+            ).fillna(False)
+            is_hybrid = raw.str.contains(r"Hybrid|Plug-In", flags=re.IGNORECASE).fillna(False)
+            is_diesel = raw.str.contains(r"Diesel", flags=re.IGNORECASE).fillna(False)
+            is_flex = raw.str.contains(r"Flex Fuel|Flexible", flags=re.IGNORECASE).fillna(False)
+            is_gasoline = raw.str.contains(r"Gasoline|Gas|GDI|MPFI", flags=re.IGNORECASE).fillna(False)
 
             df["fuel_type_engine"] = np.select(
                 [
@@ -247,7 +250,7 @@ class EngineSpecFeatureStep(FeatureStep):
                     is_diesel,
                     is_flex,
                     is_gasoline,
-                    raw.isna(),  # FIXED: Changed from raw == None to raw.isna()
+                    raw.isna(),
                 ],
                 ["Electric", "Hybrid", "Diesel", "Flex Fuel", "Gasoline", None],
                 default=None,
