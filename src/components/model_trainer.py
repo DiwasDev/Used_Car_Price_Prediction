@@ -45,7 +45,7 @@ class ModelTrainer:
             
             # Evaluate using ModelEvaluator
             evaluator = ModelEvaluator()
-            metrics = evaluator.evaluate_model(trained_model, pd.DataFrame(X_train), pd.Series(y_train))
+            metrics = evaluator.evaluate_model(trained_model, pd.DataFrame(X_test), pd.Series(y_test))
             
             r2 = metrics["R2"]
             mae = metrics["MAE"]

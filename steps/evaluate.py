@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from src.logger import logging
 import pandas as pd
+import numpy as np
 from sklearn.base import RegressorMixin
 from src.components.modeler.evaluator import ModelEvaluator
 
@@ -30,7 +31,8 @@ def evaluate_model_step(
         logging.info("Splitting test data into features and target...")
         X_test = test_df.drop(columns=[target_col])
         y_test = test_df[target_col]
-        
+
+
         logging.info("Running evaluator step...")
         evaluator = ModelEvaluator()
         metrics = evaluator.evaluate_model(model, X_test, y_test)

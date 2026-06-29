@@ -135,7 +135,7 @@ class ModelEvaluation:
 
     def initiate_model_evaluation(self) -> ModelEvaluationArtifact:
         """
-        Orchestrate model evaluation and return a ModelEvaluationArtifact describing the outcome.
+        Orchestrate model evaluation and return a ModelEvaluationArtifact describing the outcome. 
         """
         try:
             logging.info("Initialized Model Evaluation Component.")
