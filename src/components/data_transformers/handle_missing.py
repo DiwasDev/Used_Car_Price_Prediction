@@ -11,7 +11,7 @@ Design patterns
 
 from __future__ import annotations
 
-import logging
+from src.logger import logging
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -19,8 +19,6 @@ import pandas as pd
 
 from src.components.base import BaseTransformer
 from src.components.data_transformers.feature_engineering import EV_BRANDS
-
-logger = logging.getLogger(__name__)
 
 
 class ImputationStrategy(ABC):
@@ -47,7 +45,7 @@ class EngineHPImputer(ImputationStrategy):
             self.global_median_ = float(df["engine_hp"].median())
             return self
         except Exception as e:
-            logger.error("Error in EngineHPImputer.fit: %s", e)
+            logging.error("Error in EngineHPImputer.fit: %s", e)
             raise e
 
     def impute(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -58,7 +56,7 @@ class EngineHPImputer(ImputationStrategy):
             df["engine_hp"] = df["engine_hp"].fillna(brand_median_series).fillna(self.global_median_)
             return df
         except Exception as e:
-            logger.error("Error in EngineHPImputer.impute: %s", e)
+            logging.error("Error in EngineHPImputer.impute: %s", e)
             raise e
 
 
@@ -80,7 +78,7 @@ class EVFuelDisplacementImputer(ImputationStrategy):
     
             return df
         except Exception as e:
-            logger.error("Error in EVFuelDisplacementImputer.impute: %s", e)
+            logging.error("Error in EVFuelDisplacementImputer.impute: %s", e)
             raise e
 
 
@@ -97,7 +95,7 @@ class BrandHPNeighborDisplacementImputer(ImputationStrategy):
             self.global_median_ = float(df["engine_displacement"].median())
             return self
         except Exception as e:
-            logger.error("Error in BrandHPNeighborDisplacementImputer.fit: %s", e)
+            logging.error("Error in BrandHPNeighborDisplacementImputer.fit: %s", e)
             raise e
 
     def impute(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -109,7 +107,7 @@ class BrandHPNeighborDisplacementImputer(ImputationStrategy):
             df["engine_displacement"] = df["engine_displacement"].fillna(mapped_displacement).fillna(self.global_median_)
             return df
         except Exception as e:
-            logger.error("Error in BrandHPNeighborDisplacementImputer.impute: %s", e)
+            logging.error("Error in BrandHPNeighborDisplacementImputer.impute: %s", e)
             raise e
 
 
@@ -131,7 +129,7 @@ class FuelTypeBrandModeImputer(ImputationStrategy):
             self.global_mode_ = global_modes.iloc[0] if not global_modes.empty else "Gasoline"
             return self
         except Exception as e:
-            logger.error("Error in FuelTypeBrandModeImputer.fit: %s", e)
+            logging.error("Error in FuelTypeBrandModeImputer.fit: %s", e)
             raise e
 
     def impute(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -141,7 +139,7 @@ class FuelTypeBrandModeImputer(ImputationStrategy):
             df["fuel_type"] = df["fuel_type"].fillna(brand_mode_series).fillna(self.global_mode_)
             return df
         except Exception as e:
-            logger.error("Error in FuelTypeBrandModeImputer.impute: %s", e)
+            logging.error("Error in FuelTypeBrandModeImputer.impute: %s", e)
             raise e
 
 
@@ -162,7 +160,7 @@ class DisplacementHPBinImputer(ImputationStrategy):
             self.bin_medians_ = {}
             self.global_median_ = np.nan
         except Exception as e:
-            logger.error("Error in DisplacementHPBinImputer.__init__: %s", e)
+            logging.error("Error in DisplacementHPBinImputer.__init__: %s", e)
             raise e
 
     def fit(self, df: pd.DataFrame) -> DisplacementHPBinImputer:
@@ -180,7 +178,7 @@ class DisplacementHPBinImputer(ImputationStrategy):
                     self.bin_medians_ = df_copy.groupby("hp_bin")["engine_displacement"].median().to_dict()
             return self
         except Exception as e:
-            logger.error("Error in DisplacementHPBinImputer.fit: %s", e)
+            logging.error("Error in DisplacementHPBinImputer.fit: %s", e)
             raise e
 
     def impute(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -211,7 +209,7 @@ class DisplacementHPBinImputer(ImputationStrategy):
             df["engine_displacement"] = df["engine_displacement"].fillna(self.global_median_)
             return df.drop(columns=["hp_bin"])
         except Exception as e:
-            logger.error("Error in DisplacementHPBinImputer.impute: %s", e)
+            logging.error("Error in DisplacementHPBinImputer.impute: %s", e)
             raise e
 
 
@@ -229,7 +227,7 @@ class MissingValueHandlerFactory:
                 DisplacementHPBinImputer(),
             ]
         except Exception as e:
-            logger.error("Error in MissingValueHandlerFactory.create_default: %s", e)
+            logging.error("Error in MissingValueHandlerFactory.create_default: %s", e)
             raise e
 
 
@@ -242,7 +240,7 @@ class MissingValueHandler(BaseTransformer):
         try:
             self.strategies = strategies or MissingValueHandlerFactory.create_default()
         except Exception as e:
-            logger.error("Error in MissingValueHandler.__init__: %s", e)
+            logging.error("Error in MissingValueHandler.__init__: %s", e)
             raise e
 
     def fit(self, df: pd.DataFrame, y: pd.Series | None = None) -> MissingValueHandler:
@@ -253,7 +251,7 @@ class MissingValueHandler(BaseTransformer):
                 current = strategy.impute(current)
             return self
         except Exception as e:
-            logger.error("Error in MissingValueHandler.fit: %s", e)
+            logging.error("Error in MissingValueHandler.fit: %s", e)
             raise e
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -261,8 +259,8 @@ class MissingValueHandler(BaseTransformer):
             result = df.copy()
             for strategy in self.strategies:
                 result = strategy.impute(result)
-            logger.info("MissingValueHandler done. Shape: %s", result.shape)
+            logging.info("MissingValueHandler done. Shape: %s", result.shape)
             return result
         except Exception as e:
-            logger.error("Error in MissingValueHandler.transform: %s", e)
+            logging.error("Error in MissingValueHandler.transform: %s", e)
             raise e

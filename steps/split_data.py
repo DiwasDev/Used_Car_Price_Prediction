@@ -1,6 +1,7 @@
 import os
 import sys
 import pandas as pd
+from src.logger import logging
 from src.components.data_splitter import TrainTestSplitStrategy
 from src.entity.config_entity import DataSplitterConfig
 from src.entity.artifact_entity import DataSplitterArtifact, DataIngestionArtifact
@@ -25,30 +26,41 @@ def split_data(
         result: tuple[pd.DataFrame, pd.DataFrame] or DataSplitterArtifact: Train/Test data or split artifact.
     """
     try:
+        logging.info("Initiating data splitting step...")
         if isinstance(config_or_df, pd.DataFrame):
+            logging.info(f"Splitting raw DataFrame directly with test_size={test_size}")
             splitter = TrainTestSplitStrategy(test_size=test_size, random_state=random_state)
             train_df, test_df = splitter.split(config_or_df)
+            logging.info("DataFrame splitting completed successfully.")
             return train_df, test_df
         else:
             config = config_or_df
+            logging.info(f"Reading CSV file for splitting from: {ingestion_artifact.feature_store_file_path}")
             df = pd.read_csv(ingestion_artifact.feature_store_file_path)
             
             splitter = TrainTestSplitStrategy(
                 test_size=config.train_test_split_ratio,
                 random_state=config.random_state
             )
+            logging.info(f"Splitting data with test_ratio={config.train_test_split_ratio}")
             train_df, test_df = splitter.split(df)
             
             # Exporting the files is implemented in the step
             dir_path = os.path.dirname(config.training_file_path)
+            logging.info(f"Creating parent directories for train/test files: {dir_path}")
             os.makedirs(dir_path, exist_ok=True)
             
+            logging.info(f"Saving training set to: {config.training_file_path}")
             train_df.to_csv(config.training_file_path, index=False, header=True)
+            
+            logging.info(f"Saving testing set to: {config.testing_file_path}")
             test_df.to_csv(config.testing_file_path, index=False, header=True)
             
+            logging.info("Data splitting step completed successfully.")
             return DataSplitterArtifact(
                 trained_file_path=config.training_file_path,
                 test_file_path=config.testing_file_path
             )
     except Exception as e:
+        logging.error("Exception occurred during data splitting step.")
         raise MyException(e, sys)

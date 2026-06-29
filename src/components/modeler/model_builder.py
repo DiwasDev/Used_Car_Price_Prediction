@@ -6,13 +6,11 @@ Model building module using the Strategy design pattern.
 
 from __future__ import annotations
 
-import logging
+from src.logger import logging
 from abc import ABC, abstractmethod
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.base import RegressorMixin
-
-logger = logging.getLogger(__name__)
 
 
 class ModelTrainingStrategy(ABC):
@@ -64,13 +62,13 @@ class LinearRegressionStrategy(ModelTrainingStrategy):
                model: LinearRegression: Fitted Linear Regression model
         """
         try:
-            logger.info("Training Linear Regression model...")
+            logging.info("Training Linear Regression model...")
             model = LinearRegression(fit_intercept=self.fit_intercept)
             model.fit(X_train, y_train)
-            logger.info("Linear Regression model trained successfully.")
+            logging.info("Linear Regression model trained successfully.")
             return model
         except Exception as e:
-            logger.error("Error training Linear Regression model: %s", e)
+            logging.error("Error training Linear Regression model: %s", e)
             raise e
 
 
@@ -115,8 +113,8 @@ class ModelBuilder:
                model: RegressorMixin: Trained regression model
         """
         try:
-            logger.info("Building model using the selected strategy...")
+            logging.info("Building model using the selected strategy...")
             return self._strategy.train(X_train, y_train)
         except Exception as e:
-            logger.error("Error in ModelBuilder.build_model: %s", e)
+            logging.error("Error in ModelBuilder.build_model: %s", e)
             raise e

@@ -6,12 +6,10 @@ Step function to build/train the regression model.
 
 from __future__ import annotations
 
-import logging
+from src.logger import logging
 import pandas as pd
 from sklearn.base import RegressorMixin
 from src.components.modeler.model_builder import ModelBuilder, LinearRegressionStrategy
-
-logger = logging.getLogger(__name__)
 
 
 def build_model(train_df: pd.DataFrame, target_col: str = "price_usd") -> RegressorMixin:
@@ -26,16 +24,16 @@ def build_model(train_df: pd.DataFrame, target_col: str = "price_usd") -> Regres
            model: RegressorMixin: Trained regression model
     """
     try:
-        logger.info("Splitting training data into features and target...")
+        logging.info("Splitting training data into features and target...")
         X_train = train_df.drop(columns=[target_col])
         y_train = train_df[target_col]
         
-        logger.info("Training Linear Regression model using ModelBuilder strategy...")
+        logging.info("Training Linear Regression model using ModelBuilder strategy...")
         strategy = LinearRegressionStrategy()
         builder = ModelBuilder(strategy)
         model = builder.build_model(X_train, y_train)
         
         return model
     except Exception as e:
-        logger.error("Error in build_model step: %s", e)
+        logging.error("Error in build_model step: %s", e)
         raise e

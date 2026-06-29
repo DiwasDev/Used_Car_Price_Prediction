@@ -11,7 +11,7 @@ Design patterns
 
 from __future__ import annotations
 
-import logging
+from src.logger import logging
 from abc import ABC, abstractmethod
 from enum import Enum
 
@@ -19,8 +19,6 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler
 
 from src.components.base import BaseTransformer
-
-logger = logging.getLogger(__name__)
 
 
 class ScalerType(Enum):
@@ -36,7 +34,7 @@ class ScalingStrategy(ABC):
         try:
             self._fitted_columns: list[str] = []
         except Exception as e:
-            logger.error("Error in ScalingStrategy.__init__: %s", e)
+            logging.error("Error in ScalingStrategy.__init__: %s", e)
             raise e
 
     @abstractmethod
@@ -53,7 +51,7 @@ class ScalingStrategy(ABC):
                 self._scaler.fit(df[self._fitted_columns])
             return self
         except Exception as e:
-            logger.error("Error in ScalingStrategy.fit: %s", e)
+            logging.error("Error in ScalingStrategy.fit: %s", e)
             raise e
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -66,7 +64,7 @@ class ScalingStrategy(ABC):
             )
             return result
         except Exception as e:
-            logger.error("Error in ScalingStrategy.transform: %s", e)
+            logging.error("Error in ScalingStrategy.transform: %s", e)
             raise e
 
 
@@ -75,7 +73,7 @@ class StandardScalerStrategy(ScalingStrategy):
         try:
             return StandardScaler()
         except Exception as e:
-            logger.error("Error in StandardScalerStrategy._create_scaler: %s", e)
+            logging.error("Error in StandardScalerStrategy._create_scaler: %s", e)
             raise e
 
 
@@ -84,7 +82,7 @@ class RobustScalerStrategy(ScalingStrategy):
         try:
             return RobustScaler()
         except Exception as e:
-            logger.error("Error in RobustScalerStrategy._create_scaler: %s", e)
+            logging.error("Error in RobustScalerStrategy._create_scaler: %s", e)
             raise e
 
 
@@ -93,7 +91,7 @@ class MinMaxScalerStrategy(ScalingStrategy):
         try:
             return MinMaxScaler()
         except Exception as e:
-            logger.error("Error in MinMaxScalerStrategy._create_scaler: %s", e)
+            logging.error("Error in MinMaxScalerStrategy._create_scaler: %s", e)
             raise e
 
 
@@ -111,7 +109,7 @@ class ScalerFactory:
         try:
             return cls._REGISTRY[scaler_type]()
         except Exception as e:
-            logger.error("Error in ScalerFactory.create for scaler_type %s: %s", scaler_type, e)
+            logging.error("Error in ScalerFactory.create for scaler_type %s: %s", scaler_type, e)
             raise e
 
 
@@ -141,7 +139,7 @@ class FeatureScaler(BaseTransformer):
             self.strategy = ScalerFactory.create(scaler_type)
             self._is_fitted = False
         except Exception as e:
-            logger.error("Error in FeatureScaler.__init__: %s", e)
+            logging.error("Error in FeatureScaler.__init__: %s", e)
             raise e
 
     def fit(
@@ -152,7 +150,7 @@ class FeatureScaler(BaseTransformer):
             self._is_fitted = True
             return self
         except Exception as e:
-            logger.error("Error in FeatureScaler.fit: %s", e)
+            logging.error("Error in FeatureScaler.fit: %s", e)
             raise e
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -160,8 +158,8 @@ class FeatureScaler(BaseTransformer):
             if not self._is_fitted:
                 raise RuntimeError("FeatureScaler must be fitted before transform.")
             result = self.strategy.transform(df)
-            logger.info("FeatureScaler applied to columns: %s", self.strategy._fitted_columns)
+            logging.info("FeatureScaler applied to columns: %s", self.strategy._fitted_columns)
             return result
         except Exception as e:
-            logger.error("Error in FeatureScaler.transform: %s", e)
+            logging.error("Error in FeatureScaler.transform: %s", e)
             raise e

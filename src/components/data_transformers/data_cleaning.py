@@ -11,7 +11,7 @@ Design patterns
 
 from __future__ import annotations
 
-import logging
+from src.logger import logging
 import os
 import sys
 from abc import ABC, abstractmethod
@@ -25,24 +25,44 @@ import pandas as pd
 
 from src.components.base import BaseTransformer
 
-logger = logging.getLogger(__name__)
-
 
 class CleaningStrategy(ABC):
-    """Strategy interface for a single cleaning operation."""
+    """
+    Strategy interface for a single cleaning operation.
+    """
 
     @abstractmethod
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Cleans specific columns in the input DataFrame.
+
+        Parameters:
+            df (pd.DataFrame): Input DataFrame.
+
+        Returns:
+            pd.DataFrame: Cleaned DataFrame.
+        """
         ...
 
 
 class PriceCleaningStrategy(CleaningStrategy):
-    """'$10,300' → price_usd (float). Drops original price column."""
+    """
+    Price cleaning strategy: '$10,300' -> price_usd (float). Drops original price column.
+    """
 
     SOURCE_COL = "price"
     TARGET_COL = "price_usd"
 
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Cleans the price column.
+
+        Parameters:
+            df (pd.DataFrame): Input DataFrame.
+
+        Returns:
+            pd.DataFrame: Cleaned DataFrame.
+        """
         try:
             df[self.TARGET_COL] = (
                 df[self.SOURCE_COL]
@@ -52,17 +72,28 @@ class PriceCleaningStrategy(CleaningStrategy):
             )
             return df.drop(columns=[self.SOURCE_COL])
         except Exception as e:
-            logger.error("Error in PriceCleaningStrategy.clean: %s", e)
+            logging.error("Error in PriceCleaningStrategy.clean: %s", e)
             raise e
 
 
 class MileageCleaningStrategy(CleaningStrategy):
-    """'51,000 mi.' → mileage_num (float). Drops original milage column."""
+    """
+    Mileage cleaning strategy: '51,000 mi.' -> mileage_num (float). Drops original milage column.
+    """
 
     SOURCE_COL = "milage"
     TARGET_COL = "mileage_num"
 
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Cleans the mileage column.
+
+        Parameters:
+            df (pd.DataFrame): Input DataFrame.
+
+        Returns:
+            pd.DataFrame: Cleaned DataFrame.
+        """
         try:
             df[self.TARGET_COL] = (
                 df[self.SOURCE_COL]
@@ -73,45 +104,75 @@ class MileageCleaningStrategy(CleaningStrategy):
             )
             return df.drop(columns=[self.SOURCE_COL])
         except Exception as e:
-            logger.error("Error in MileageCleaningStrategy.clean: %s", e)
+            logging.error("Error in MileageCleaningStrategy.clean: %s", e)
             raise e
 
 
 class FuelTypeCleaningStrategy(CleaningStrategy):
-    """Replace known junk tokens with NaN for downstream imputation."""
+    """
+    FuelType cleaning strategy: Replace known junk tokens with NaN for downstream imputation.
+    """
 
     JUNK_VALUES = frozenset({"–", "not supported", ""})
 
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Cleans the fuel type column by replacing junk values with None.
+
+        Parameters:
+            df (pd.DataFrame): Input DataFrame.
+
+        Returns:
+            pd.DataFrame: Cleaned DataFrame.
+        """
         try:
             df["fuel_type"] = df["fuel_type"].apply(
                 lambda x: None if str(x).strip() in self.JUNK_VALUES else x
             )
             return df
         except Exception as e:
-            logger.error("Error in FuelTypeCleaningStrategy.clean: %s", e)
+            logging.error("Error in FuelTypeCleaningStrategy.clean: %s", e)
             raise e
 
 
 class CleanTitleCleaningStrategy(CleaningStrategy):
-    """'Yes' / NaN → has_clean_title binary flag. Drops clean_title."""
+    """
+    CleanTitle cleaning strategy: 'Yes' / NaN -> has_clean_title binary flag. Drops clean_title.
+    """
 
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Cleans the clean title column.
+
+        Parameters:
+            df (pd.DataFrame): Input DataFrame.
+
+        Returns:
+            pd.DataFrame: Cleaned DataFrame.
+        """
         try:
             df["has_clean_title"] = (
                 df["clean_title"].map({"Yes": 1}).fillna(0).astype(int)
             )
             return df.drop(columns=["clean_title"])
         except Exception as e:
-            logger.error("Error in CleanTitleCleaningStrategy.clean: %s", e)
+            logging.error("Error in CleanTitleCleaningStrategy.clean: %s", e)
             raise e
 
-## Just if we wnat to reutrn default pattern of cleanign pipeline
+
 class CleaningStrategyFactory:
-    """Factory for assembling the default cleaning strategy chain."""
+    """
+    Factory for assembling the default cleaning strategy chain.
+    """
 
     @staticmethod
     def create_default() -> list[CleaningStrategy]:
+        """
+        Creates a list of default cleaning strategies.
+
+        Returns:
+            list[CleaningStrategy]: The default list of strategies.
+        """
         try:
             return [
                 PriceCleaningStrategy(),
@@ -120,10 +181,10 @@ class CleaningStrategyFactory:
                 CleanTitleCleaningStrategy(),
             ]
         except Exception as e:
-            logger.error("Error in CleaningStrategyFactory.create_default: %s", e)
+            logging.error("Error in CleaningStrategyFactory.create_default: %s", e)
             raise e
 
-## Context class for strategy pattern
+
 class DataCleaner(BaseTransformer):
     """
     Facade that runs a chain of CleaningStrategy objects in order.
@@ -135,21 +196,36 @@ class DataCleaner(BaseTransformer):
     """
 
     def __init__(self, strategies: list[CleaningStrategy] | None = None) -> None:
+        """
+        Initializes the DataCleaner with a list of strategies.
+
+        Parameters:
+            strategies (list[CleaningStrategy], optional): Custom list of cleaning strategies.
+        """
         try:
             self.strategies = strategies or CleaningStrategyFactory.create_default()
         except Exception as e:
-            logger.error("Error in DataCleaner.__init__: %s", e)
+            logging.error("Error in DataCleaner.__init__: %s", e)
             raise e
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Transforms the input DataFrame by running each cleaning strategy sequentially.
+
+        Parameters:
+            df (pd.DataFrame): Input DataFrame.
+
+        Returns:
+            pd.DataFrame: Cleaned DataFrame.
+        """
         result = df.copy()
         try:
             for strategy in self.strategies:
                 result = strategy.clean(result)
-            logger.info("DataCleaner done. Shape: %s", result.shape)
+            logging.info("DataCleaner done. Shape: %s", result.shape)
             return result
         except Exception as e:
-            logger.error("Error cleaning data: %s", e)
+            logging.error("Error cleaning data: %s", e)
             raise e
 
 

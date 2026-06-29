@@ -11,7 +11,7 @@ Design patterns
 
 from __future__ import annotations
 
-import logging
+from src.logger import logging
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -21,8 +21,6 @@ from sklearn.model_selection import KFold
 from sklearn.preprocessing import OneHotEncoder
 
 from src.components.base import BaseTransformer
-
-logger = logging.getLogger(__name__)
 
 
 class EncodingStrategy(ABC):
@@ -43,7 +41,7 @@ class EncodingStrategy(ABC):
         try:
             return self.fit(df, y).transform(df)
         except Exception as e:
-            logger.error("Error in EncodingStrategy.fit_transform: %s", e)
+            logging.error("Error in EncodingStrategy.fit_transform: %s", e)
             raise e
 
 
@@ -65,7 +63,7 @@ class OneHotEncodingStrategy(EncodingStrategy):
             self.drop_first = drop_first
             self._encoder: OneHotEncoder | None = None
         except Exception as e:
-            logger.error("Error in OneHotEncodingStrategy.__init__: %s", e)
+            logging.error("Error in OneHotEncodingStrategy.__init__: %s", e)
             raise e
 
     def fit(
@@ -80,7 +78,7 @@ class OneHotEncodingStrategy(EncodingStrategy):
             self._encoder.fit(df[self.columns])
             return self
         except Exception as e:
-            logger.error("Error in OneHotEncodingStrategy.fit: %s", e)
+            logging.error("Error in OneHotEncodingStrategy.fit: %s", e)
             raise e
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -98,11 +96,11 @@ class OneHotEncodingStrategy(EncodingStrategy):
                 columns=self._encoder.get_feature_names_out(self.columns),
                 index=df.index,
             )
-            logger.info("Completed one hot encoding transformation.")
+            logging.info("Completed one hot encoding transformation.")
             return pd.concat([df.drop(columns=self.columns), encoded], axis=1)
         
         except Exception as e:
-            logger.error("Error in OneHotEncodingStrategy.transform: %s", e)
+            logging.error("Error in OneHotEncodingStrategy.transform: %s", e)
             raise e
         
 
@@ -132,7 +130,7 @@ class TargetEncodingStrategy(EncodingStrategy):
             self._master_encoder: TargetEncoder | None = None
             self._oof_values: pd.DataFrame | None = None
         except Exception as e:
-            logger.error("Error in TargetEncodingStrategy.__init__: %s", e)
+            logging.error("Error in TargetEncodingStrategy.__init__: %s", e)
             raise e
 
     def fit(
@@ -146,7 +144,7 @@ class TargetEncodingStrategy(EncodingStrategy):
             self._master_encoder.fit(df, target)
             return self
         except Exception as e:
-            logger.error("Error in TargetEncodingStrategy.fit: %s", e)
+            logging.error("Error in TargetEncodingStrategy.fit: %s", e)
             raise e
 
     def fit_transform(
@@ -179,7 +177,7 @@ class TargetEncodingStrategy(EncodingStrategy):
             self._master_encoder.fit(df, target)
             return result
         except Exception as e:
-            logger.error("Error in TargetEncodingStrategy.fit_transform: %s", e)
+            logging.error("Error in TargetEncodingStrategy.fit_transform: %s", e)
             raise e
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -190,7 +188,7 @@ class TargetEncodingStrategy(EncodingStrategy):
                 )
             return self._master_encoder.transform(df)
         except Exception as e:
-            logger.error("Error in TargetEncodingStrategy.transform: %s", e)
+            logging.error("Error in TargetEncodingStrategy.transform: %s", e)
             raise e
 
 # Generates objects for encoding
@@ -207,7 +205,7 @@ class CategoricalEncoderFactory:
                 TargetEncodingStrategy(target_col=target_col, random_state=random_state),
             ]
         except Exception as e:
-            logger.error("Error in CategoricalEncoderFactory.create_default: %s", e)
+            logging.error("Error in CategoricalEncoderFactory.create_default: %s", e)
             raise e
 
 
@@ -222,7 +220,7 @@ class CategoricalEncoder(BaseTransformer):
             self.strategies = strategies or CategoricalEncoderFactory.create_default()
             self._is_fitted = False
         except Exception as e:
-            logger.error("Error in CategoricalEncoder.__init__: %s", e)
+            logging.error("Error in CategoricalEncoder.__init__: %s", e)
             raise e
 
     def fit(
@@ -239,7 +237,7 @@ class CategoricalEncoder(BaseTransformer):
             self._is_fitted = True
             return self
         except Exception as e:
-            logger.error("Error in CategoricalEncoder.fit: %s", e)
+            logging.error("Error in CategoricalEncoder.fit: %s", e)
             raise e
 
     def fit_transform(
@@ -252,10 +250,10 @@ class CategoricalEncoder(BaseTransformer):
             for strategy in self.strategies:
                     result = strategy.fit_transform(result, target)
             self._is_fitted = True
-            logger.info("CategoricalEncoder fit_transform done. Shape: %s", result.shape)
+            logging.info("CategoricalEncoder fit_transform done. Shape: %s", result.shape)
             return result
         except Exception as e:
-            logger.error("Error in CategoricalEncoder.fit_transform: %s", e)
+            logging.error("Error in CategoricalEncoder.fit_transform: %s", e)
             raise e
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -268,5 +266,5 @@ class CategoricalEncoder(BaseTransformer):
                 result = strategy.transform(result)
             return result
         except Exception as e:
-            logger.error("Error in CategoricalEncoder.transform: %s", e)
+            logging.error("Error in CategoricalEncoder.transform: %s", e)
             raise e

@@ -6,14 +6,12 @@ Evaluation module using strategy design pattern.
 
 from __future__ import annotations
 
-import logging
+from src.logger import logging
 from abc import ABC, abstractmethod
 import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 from sklearn.base import RegressorMixin
-
-logger = logging.getLogger(__name__)
 
 
 class EvaluationStrategy(ABC):
@@ -54,10 +52,10 @@ class MeanSquaredErrorEvaluation(EvaluationStrategy):
         """
         try:
             mse = mean_squared_error(y_true, y_pred)
-            logger.info("Mean Squared Error: %f", mse)
+            logging.info("Mean Squared Error: %f", mse)
             return float(mse)
         except Exception as e:
-            logger.error("Error in MeanSquaredErrorEvaluation: %s", e)
+            logging.error("Error in MeanSquaredErrorEvaluation: %s", e)
             raise e
 
 
@@ -79,10 +77,10 @@ class RootMeanSquaredErrorEvaluation(EvaluationStrategy):
         """
         try:
             rmse = np.sqrt(mean_squared_error(y_true, y_pred))
-            logger.info("Root Mean Squared Error: %f", rmse)
+            logging.info("Root Mean Squared Error: %f", rmse)
             return float(rmse)
         except Exception as e:
-            logger.error("Error in RootMeanSquaredErrorEvaluation: %s", e)
+            logging.error("Error in RootMeanSquaredErrorEvaluation: %s", e)
             raise e
 
 
@@ -104,10 +102,10 @@ class RSquaredEvaluation(EvaluationStrategy):
         """
         try:
             r2 = r2_score(y_true, y_pred)
-            logger.info("R-Squared: %f", r2)
+            logging.info("R-Squared: %f", r2)
             return float(r2)
         except Exception as e:
-            logger.error("Error in RSquaredEvaluation: %s", e)
+            logging.error("Error in RSquaredEvaluation: %s", e)
             raise e
 
 
@@ -129,10 +127,10 @@ class MeanAbsoluteErrorEvaluation(EvaluationStrategy):
         """
         try:
             mae = mean_absolute_error(y_true, y_pred)
-            logger.info("Mean Absolute Error: %f", mae)
+            logging.info("Mean Absolute Error: %f", mae)
             return float(mae)
         except Exception as e:
-            logger.error("Error in MeanAbsoluteErrorEvaluation: %s", e)
+            logging.error("Error in MeanAbsoluteErrorEvaluation: %s", e)
             raise e
 
 
@@ -174,7 +172,7 @@ class ModelEvaluator:
                results: dict[str, float]: Dictionary containing all metric values
         """
         try:
-            logger.info("Generating predictions using the model...")
+            logging.info("Generating predictions using the model...")
             y_pred = model.predict(X_test)
             
             results = {}
@@ -182,9 +180,9 @@ class ModelEvaluator:
                 val = strategy.evaluate(y_test, y_pred)
                 results[name] = val
                 
-            logger.info("Evaluation metrics: %s", results)
+            logging.info("Evaluation metrics: %s", results)
             return results
         except Exception as e:
-            logger.error("Error during model evaluation: %s", e)
+            logging.error("Error during model evaluation: %s", e)
             raise e
 

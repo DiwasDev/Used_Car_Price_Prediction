@@ -1,4 +1,5 @@
 import sys
+from src.logger import logging
 from src.components.model_evaluation import ModelEvaluation
 from src.entity.config_entity import ModelEvaluationConfig
 from src.entity.artifact_entity import ModelTrainerArtifact, DataTransformationArtifact, ModelEvaluationArtifact, DataSplitterArtifact
@@ -23,12 +24,16 @@ def evaluate_model(
         artifact: ModelEvaluationArtifact: Artifact containing evaluation results.
     """
     try:
+        logging.info("Initiating model evaluation step...")
         evaluator = ModelEvaluation(
             model_eval_config=config,
             data_splitter_artifact=data_splitter_artifact,
             data_transformation_artifact=data_transformation_artifact,
             model_trainer_artifact=model_trainer_artifact
         )
-        return evaluator.initiate_model_evaluation()
+        result = evaluator.initiate_model_evaluation()
+        logging.info("Model evaluation step completed successfully.")
+        return result
     except Exception as e:
+        logging.error("Exception occurred during model evaluation step.")
         raise MyException(e, sys)

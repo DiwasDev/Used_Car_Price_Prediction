@@ -11,7 +11,7 @@ Design patterns
 
 from __future__ import annotations
 
-import logging
+from src.logger import logging
 import re
 from abc import ABC, abstractmethod
 
@@ -26,8 +26,6 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 from src.components.base import BaseTransformer
-
-logger = logging.getLogger(__name__)
 
 EV_BRANDS = frozenset({"tesla", "rivian", "lucid", "polestar"})
 COLOR_COLUMNS = ("int_col", "ext_col")
@@ -67,7 +65,7 @@ class ModelFeatureStep(FeatureStep):
             )
             return df.drop(columns=["model"])
         except Exception as e:
-            logger.error("Error in ModelFeatureStep.apply: %s", e)
+            logging.error("Error in ModelFeatureStep.apply: %s", e)
             raise e
 
 
@@ -123,7 +121,7 @@ class ColorMappingStep(FeatureStep):
                 
             return df
         except Exception as e:
-            logger.error("Error in ColorMappingStep.apply: %s", e)
+            logging.error("Error in ColorMappingStep.apply: %s", e)
             raise e
 
 
@@ -141,7 +139,7 @@ class AccidentMappingStep(FeatureStep):
             df["accident"] = df["accident"].map(self.ACCIDENT_MAP).fillna(0)
             return df
         except Exception as e:
-            logger.error("Error in AccidentMappingStep.apply: %s", e)
+            logging.error("Error in AccidentMappingStep.apply: %s", e)
             raise e
 
 
@@ -185,7 +183,7 @@ class TransmissionFeatureStep(FeatureStep):
             # Drop the raw transmission column
             return df.drop(columns=["transmission"])
         except Exception as e:
-            logger.error("Error in TransmissionFeatureStep.apply: %s", e)
+            logging.error("Error in TransmissionFeatureStep.apply: %s", e)
             raise e
 
 
@@ -260,7 +258,7 @@ class EngineSpecFeatureStep(FeatureStep):
             ] = 0
             return df.drop(columns=["engine"])  
         except Exception as e:
-            logger.error("Error in EngineSpecFeatureStep.apply: %s", e)
+            logging.error("Error in EngineSpecFeatureStep.apply: %s", e)
             raise e
 
 
@@ -273,7 +271,7 @@ class FuelTypeMergeStep(FeatureStep):
             df["fuel_type"] = df["fuel_type"].fillna(df["fuel_type_engine"])
             return df.drop(columns=["fuel_type_engine"])
         except Exception as e:
-            logger.error("Error in FuelTypeMergeStep.apply: %s", e)
+            logging.error("Error in FuelTypeMergeStep.apply: %s", e)
             raise e
 
 
@@ -287,7 +285,7 @@ class FuelTypeMergeStep(FeatureStep):
 #             existing = [c for c in self.COLUMNS if c in df.columns]
 #             return df.drop(columns=existing) if existing else df
 #         except Exception as e:
-#             logger.error("Error in DropRedundantColumnsStep.apply: %s", e)
+#             logging.error("Error in DropRedundantColumnsStep.apply: %s", e)
 #             raise e
 
 
@@ -309,7 +307,7 @@ class FeatureEngineerFactory:
                 FuelTypeMergeStep(),
             ]
         except Exception as e:
-            logger.error("Error in FeatureEngineerFactory.create_default: %s", e)
+            logging.error("Error in FeatureEngineerFactory.create_default: %s", e)
             raise e
 
 
@@ -320,7 +318,7 @@ class FeatureEngineer(BaseTransformer):
         try:
             self.steps = steps or FeatureEngineerFactory.create_default()
         except Exception as e:
-            logger.error("Error in FeatureEngineer.__init__: %s", e)
+            logging.error("Error in FeatureEngineer.__init__: %s", e)
             raise e
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -328,10 +326,10 @@ class FeatureEngineer(BaseTransformer):
             result = df.copy()
             for step in self.steps:
                 result = step.apply(result)
-            logger.info("FeatureEngineer done. Shape: %s", result.shape)
+            logging.info("FeatureEngineer done. Shape: %s", result.shape)
             return result
         except Exception as e:
-            logger.error("Error in FeatureEngineer.transform: %s", e)
+            logging.error("Error in FeatureEngineer.transform: %s", e)
             raise e
 
 

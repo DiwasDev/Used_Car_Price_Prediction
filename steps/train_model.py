@@ -1,4 +1,5 @@
 import sys
+from src.logger import logging
 from src.components.model_trainer import ModelTrainer
 from src.entity.config_entity import ModelTrainerConfig
 from src.entity.artifact_entity import DataTransformationArtifact, ModelTrainerArtifact
@@ -19,10 +20,14 @@ def train_model(
         artifact: ModelTrainerArtifact: Artifact containing trained model file path and metrics.
     """
     try:
+        logging.info("Initiating model training step...")
         trainer = ModelTrainer(
             data_transformation_artifact=transformation_artifact,
             model_trainer_config=config
         )
-        return trainer.initiate_model_trainer()
+        result = trainer.initiate_model_trainer()
+        logging.info("Model training step completed successfully.")
+        return result
     except Exception as e:
+        logging.error("Exception occurred during model training step.")
         raise MyException(e, sys)

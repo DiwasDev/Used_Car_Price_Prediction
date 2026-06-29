@@ -11,15 +11,13 @@ Design patterns
 
 from __future__ import annotations
 
-import logging
+from src.logger import logging
 from abc import ABC, abstractmethod
 
 import numpy as np
 import pandas as pd
 
 from src.components.base import BaseTransformer
-
-logger = logging.getLogger(__name__)
 
 
 class OutlierStrategy(ABC):
@@ -41,7 +39,7 @@ class IQROutlierHandlerStrategy(OutlierStrategy):
             self.columns = columns or ["engine_hp", "engine_displacement"]
             self.capping_bounds ={}
         except Exception as e:
-            logger.error("Error in IQROutlierHandlerStrategy.__init__: %s", e)
+            logging.error("Error in IQROutlierHandlerStrategy.__init__: %s", e)
             raise e
         
     def fit(self, df: pd.DataFrame)-> None:
@@ -65,7 +63,7 @@ class IQROutlierHandlerStrategy(OutlierStrategy):
             upper_bound = q3 + 1.5 * iqr
             # Save lower and upper bounds for future use
             self.capping_bounds[col] = {'lower': lower_bound, 'upper': upper_bound}
-            logger.info(
+            logging.info(
                 "IQROutlierHandlerStrategy calculated lower and upper bounds for '%s' using IQR method.",
                 col,
             )
@@ -81,10 +79,10 @@ class IQROutlierHandlerStrategy(OutlierStrategy):
 
                     df[col] = df[col].clip(lower= lower_bound, upper=upper_bound)
 
-            logger.info("IQROutlierHandlerStrategy applied IQR method to %s columns.", len(self.columns))
+            logging.info("IQROutlierHandlerStrategy applied IQR method to %s columns.", len(self.columns))
             return df
         except Exception as e:
-            logger.error("Error in IQROutlierHandlerStrategy.apply: %s", e)
+            logging.error("Error in IQROutlierHandlerStrategy.apply: %s", e)
             raise e
 
 
@@ -97,7 +95,7 @@ class LogTransformStrategy(OutlierStrategy):
         try:
             self.columns = columns or ["price_usd", "mileage_num"]
         except Exception as e:
-            logger.error("Error in LogTransformStrategy.__init__: %s", e)
+            logging.error("Error in LogTransformStrategy.__init__: %s", e)
             raise e
         
     def fit(self, df: pd.DataFrame) -> None:
@@ -112,7 +110,7 @@ class LogTransformStrategy(OutlierStrategy):
                     df[col] = np.log1p(df[col])
             return df
         except Exception as e:
-            logger.error("Error in LogTransformStrategy.apply: %s", e)
+            logging.error("Error in LogTransformStrategy.apply: %s", e)
             raise e
 
 
@@ -127,7 +125,7 @@ class OutlierHandlerFactory:
              IQROutlierHandlerStrategy(columns=["engine_hp", "engine_displacement"]),
          ]
         except Exception as e:
-            logger.error("Error in OutlierHandlerFactory.create_default: %s", e)
+            logging.error("Error in OutlierHandlerFactory.create_default: %s", e)
             raise e
 
 #Context:Facade pattern here
@@ -138,7 +136,7 @@ class OutlierHandler(BaseTransformer):
         try:
             self.strategies = strategies or OutlierHandlerFactory.create_default()
         except Exception as e:
-            logger.error("Error in OutlierHandler.__init__: %s", e)
+            logging.error("Error in OutlierHandler.__init__: %s", e)
             raise e
         
     def fit(self, df: pd.DataFrame, y: pd.Series | None = None) -> OutlierHandler:
@@ -148,7 +146,7 @@ class OutlierHandler(BaseTransformer):
                 strategy.fit(df)
             return self
         except Exception as e:
-            logger.error("Error in OutlierHandler.fit: %s", e)
+            logging.error("Error in OutlierHandler.fit: %s", e)
             raise e
         
 
@@ -159,7 +157,7 @@ class OutlierHandler(BaseTransformer):
                 result = strategy.apply(result)
             return result
         except Exception as e:
-            logger.error("Error in OutlierHandler.transform: %s", e)
+            logging.error("Error in OutlierHandler.transform: %s", e)
             raise e
 
 
@@ -172,7 +170,7 @@ class OutlierHandler(BaseTransformer):
 #         try:
 #             return OutlierHandler(strategies=[LogTransformStrategy(columns=columns)])
 #         except Exception as e:
-#             logger.error("Error in OutlierHandlerFactory.log_transform_handler: %s", e)
+#             logging.error("Error in OutlierHandlerFactory.log_transform_handler: %s", e)
 #             raise e
 
 #     @staticmethod
@@ -184,7 +182,7 @@ class OutlierHandler(BaseTransformer):
 #                 strategies=[IQROutlierHandlerStrategy(columns=columns)]
 #             )
 #         except Exception as e:
-#             logger.error("Error in OutlierHandlerFactory.iqr_outlier_handler: %s", e)
+#             logging.error("Error in OutlierHandlerFactory.iqr_outlier_handler: %s", e)
 #             raise e
 
 

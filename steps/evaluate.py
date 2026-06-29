@@ -6,12 +6,10 @@ Step function to evaluate the trained model on test data.
 
 from __future__ import annotations
 
-import logging
+from src.logger import logging
 import pandas as pd
 from sklearn.base import RegressorMixin
 from src.components.modeler.evaluator import ModelEvaluator
-
-logger = logging.getLogger(__name__)
 
 
 def evaluate_model_step(
@@ -29,15 +27,15 @@ def evaluate_model_step(
            metrics: dict[str, float]: Dictionary containing regression metrics (MSE, RMSE, R2, MAE, etc.)
     """
     try:
-        logger.info("Splitting test data into features and target...")
+        logging.info("Splitting test data into features and target...")
         X_test = test_df.drop(columns=[target_col])
         y_test = test_df[target_col]
         
-        logger.info("Running evaluator step...")
+        logging.info("Running evaluator step...")
         evaluator = ModelEvaluator()
         metrics = evaluator.evaluate_model(model, X_test, y_test)
         
         return metrics
     except Exception as e:
-        logger.error("Error in evaluate_model_step: %s", e)
+        logging.error("Error in evaluate_model_step: %s", e)
         raise e
